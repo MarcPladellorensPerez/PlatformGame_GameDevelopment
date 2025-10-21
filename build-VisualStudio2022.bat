@@ -17,12 +17,21 @@ echo Opening solution...
 
 cd ..
 
-if exist "*.sln" (
+echo Looking for solution file...
+for %%f in (*.sln) do (
+    echo Found solution file: %%f
     echo Waiting 5 seconds before opening solution...
     timeout /t 5 /nobreak >nul
     echo Opening solution file...
-    start HOL.sln
-) else (
-    echo Solution file not found!
-    pause
+    start "%%f" "%%f"
+    goto :found
 )
+
+echo Solution file not found!
+pause
+goto :end
+
+:found
+echo Solution opened successfully!
+
+:end
