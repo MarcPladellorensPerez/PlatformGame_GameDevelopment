@@ -75,11 +75,11 @@ function get_latest_versions()
             fallback = "3.1.1"
         },
         libpng = {
-            repo = "pnggroup/libpng",
+            repo = "TheUnrealZaka/libpng",
             fallback = "1.6.44"
         },
         libjpeg_turbo = {
-            repo = "libjpeg-turbo/libjpeg-turbo",
+            repo = "TheUnrealZaka/libjpeg-turbo",
             fallback = "3.0.4"
         },
         pugixml = {
@@ -177,56 +177,28 @@ function check_libjpeg_turbo()
     
     -- Use fixed version for prebuilt binaries
     local libjpeg_version = "3.1.2"
-    local libjpeg_exe = "libjpeg-turbo-" .. libjpeg_version .. "-vc-x64.exe"
-    local temp_extract_folder = "libjpeg-turbo-" .. libjpeg_version .. "-vc-x64"
+    local libjpeg_folder = "libjpeg-turbo-" .. libjpeg_version .. "-vc-x64"
+    local libjpeg_zip = libjpeg_folder .. ".zip"
     
     if(os.isdir("libjpeg-turbo") == false) then
-        if(not os.isfile(libjpeg_exe)) then
-            print("libjpeg-turbo v" .. libjpeg_version .. " not found, downloading prebuilt binaries from GitHub")
-            local download_url = "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/" .. libjpeg_version .. "/libjpeg-turbo-" .. libjpeg_version .. "-vc-x64.exe"
-            local result_str, response_code = http.download(download_url, libjpeg_exe, {
+        if(not os.isfile(libjpeg_zip)) then
+            print("libjpeg-turbo v" .. libjpeg_version .. " not found, downloading from GitHub")
+            local download_url = "https://github.com/TheUnrealZaka/libjpeg-turbo/releases/download/" .. libjpeg_version .. "/" .. libjpeg_zip
+            local result_str, response_code = http.download(download_url, libjpeg_zip, {
                 progress = download_progress,
                 headers = { "From: Premake", "Referer: Premake" }
             })
         end
+        print("Unzipping libjpeg-turbo to " .. os.getcwd())
+        zip.extract(libjpeg_zip, os.getcwd())
         
-        print("Extracting libjpeg-turbo installer with 7zip...")
-        -- Try to extract with 7zip (if available)
-        local extract_cmd = '7z x "' .. libjpeg_exe .. '" -o"' .. temp_extract_folder .. '" -y'
-        local result = os.execute(extract_cmd)
-        
-        -- Wait a moment for extraction to complete
-        os.execute("ping 127.0.0.1 -n 2 > nul")
-        
-        -- Check if the folder with version number exists
-        if os.isdir(temp_extract_folder) then
-            -- Successfully extracted with 7zip, now rename
-            os.rename(temp_extract_folder, "libjpeg-turbo")
-            print("Renamed " .. temp_extract_folder .. " to libjpeg-turbo")
-        elseif result ~= 0 then
-            print("7zip not found or extraction failed. Trying with PowerShell installer...")
-            -- Fallback: Try PowerShell with the .exe as if it were a zip (sometimes works with NSIS)
-            local ps_cmd = 'powershell -Command "Start-Process -FilePath \\"' .. libjpeg_exe .. '\\" -ArgumentList \\"/S\\", \\"/D=' .. path.getabsolute("libjpeg-turbo") .. '\\" -Wait"'
-            os.execute(ps_cmd)
-            
-            -- Wait for installation
-            os.execute("ping 127.0.0.1 -n 3 > nul")
-            
-            if not os.isdir("libjpeg-turbo") then
-                print("ERROR: Could not extract libjpeg-turbo automatically.")
-                print("Please manually extract " .. libjpeg_exe .. " to create a 'libjpeg-turbo' folder")
-                print("You can use 7-Zip or install the .exe and copy files to:")
-                print(path.getabsolute("libjpeg-turbo"))
-                os.chdir("../")
-                return
-            end
+        -- Rename the extracted folder to simple name
+        if os.isdir(libjpeg_folder) then
+            os.rename(libjpeg_folder, "libjpeg-turbo")
+            print("Renamed " .. libjpeg_folder .. " to libjpeg-turbo")
         end
         
-        if os.isdir("libjpeg-turbo") then
-            print("libjpeg-turbo extracted successfully")
-            -- Clean up the installer
-            os.remove(libjpeg_exe)
-        end
+        os.remove(libjpeg_zip)
     else
         print("libjpeg-turbo already exists")
     end
@@ -306,104 +278,41 @@ end
 function check_libpng()
     os.chdir("external")
     
-    -- Use fixed version for prebuilt binaries from SourceForge
+    -- Use fixed version for prebuilt binaries
     local libpng_version = "1.2.37"
-    local libpng_zip = "libpng-" .. libpng_version .. "-lib.zip"
+    local libpng_folder = "libpng-" .. libpng_version .. "-lib"
+    local libpng_zip = libpng_folder .. ".zip"
     
     if(os.isdir("libpng") == false) then
         if(not os.isfile(libpng_zip)) then
-            print("libpng v" .. libpng_version .. " not found, downloading from SourceForge")
-            -- Use curl.exe (Windows 10+ native) with the direct mirror link
-            local download_url = "https://master.dl.sourceforge.net/project/gnuwin32/libpng/" .. libpng_version .. "/libpng-" .. libpng_version .. "-lib.zip?viasf=1"
-            local curl_command = 'curl.exe -L -o "' .. libpng_zip .. '" "' .. download_url .. '"'
-            print("Downloading using curl...")
-            os.execute(curl_command)
-            
-            -- Check if file was downloaded successfully
-            if not os.isfile(libpng_zip) then
-                print("ERROR: Failed to download libpng")
-                print("You may need to manually download from:")
-                print(download_url)
-                print("And place it in: " .. os.getcwd())
-                os.chdir("../")
-                return
-            end
-            
-            print("Download completed successfully")
+            print("libpng v" .. libpng_version .. " not found, downloading from GitHub")
+            local download_url = "https://github.com/TheUnrealZaka/libpng/releases/download/v" .. libpng_version .. "/" .. libpng_zip
+            local result_str, response_code = http.download(download_url, libpng_zip, {
+                progress = download_progress,
+                headers = { "From: Premake", "Referer: Premake" }
+            })
         end
         
-        -- Check if the zip file actually exists and has content
-        if os.isfile(libpng_zip) then
-            print("Unzipping libpng to " .. os.getcwd())
-            
-            -- Extract directly (most zip files extract to a subfolder)
-            local extract_success, extract_err = pcall(function()
-                zip.extract(libpng_zip, os.getcwd())
-            end)
-            
-            if not extract_success then
-                print("ERROR: Failed to extract zip file: " .. tostring(extract_err))
-                print("The zip file might be corrupted. Trying to extract with PowerShell...")
-                local ps_extract = 'powershell -Command "Expand-Archive -Path \'' .. libpng_zip .. '\' -DestinationPath \'.\' -Force"'
-                local extract_result = os.execute(ps_extract)
-                if extract_result ~= 0 then
-                    print("ERROR: PowerShell extraction also failed")
-                    print("File is located at: " .. os.getcwd() .. "\\" .. libpng_zip)
-                    os.chdir("../")
-                    return
-                end
-            end
-            
-            -- Check different possible extraction patterns
-            local possible_folders = {
-                "libpng-" .. libpng_version .. "-lib",
-                "libpng-" .. libpng_version,
-                "libpng"
-            }
-            
-            local found = false
-            for _, folder in ipairs(possible_folders) do
-                if os.isdir(folder) then
-                    if folder ~= "libpng" then
-                        os.rename(folder, "libpng")
-                        print("Renamed " .. folder .. " to libpng")
-                    else
-                        print("libpng folder found")
-                    end
-                    found = true
-                    break
-                end
-            end
-            
-            -- Check if files were extracted directly (no subfolder)
-            if not found and os.isdir("include") and os.isdir("lib") then
-                print("libpng extracted directly without subfolder, creating libpng directory...")
-                os.mkdir("libpng")
-                -- Move extracted folders into libpng
-                if os.isdir("include") then
-                    os.rename("include", "libpng/include")
-                end
-                if os.isdir("lib") then
-                    os.rename("lib", "libpng/lib")
-                end
-                if os.isdir("manifest") then
-                    os.rename("manifest", "libpng/manifest")
-                end
-                found = true
-                print("libpng directory structure created")
-            end
-            
-            if found then
-                os.remove(libpng_zip)
-                print("libpng installed successfully")
-            else
-                print("ERROR: Could not find expected libpng folder after extraction")
-                print("Please check the external directory and manually rename the folder to 'libpng'")
-                print("Keeping zip file for inspection: " .. libpng_zip)
-            end
+        -- Create temporary extraction folder
+        local temp_folder = "libpng_temp"
+        os.mkdir(temp_folder)
+        
+        print("Unzipping libpng to " .. temp_folder)
+        zip.extract(libpng_zip, temp_folder)
+        
+        -- Check if it extracted to a subfolder or directly
+        if os.isdir(temp_folder .. "/" .. libpng_folder) then
+            -- Extracted to subfolder, rename it
+            os.rename(temp_folder .. "/" .. libpng_folder, "libpng")
+            print("Renamed " .. libpng_folder .. " to libpng")
+            os.rmdir(temp_folder)
         else
-            print("ERROR: libpng zip file was not downloaded properly")
+            -- Extracted directly, just rename temp folder
+            os.rename(temp_folder, "libpng")
+            print("Created libpng directory from extracted files")
         end
+        
+        os.remove(libpng_zip)
     else
         print("libpng already exists")
     end
