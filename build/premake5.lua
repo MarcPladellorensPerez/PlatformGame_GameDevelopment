@@ -499,20 +499,20 @@ end
             filter { "system:windows", "platforms:x64" }
                 libdirs { "../bin/%{cfg.buildcfg}", sdl3_dir .. "/lib/x64", sdl3_image_dir .. "/lib/x64", libjpeg_turbo_dir .. "/lib", libpng_dir .. "/lib" }
                 postbuildcommands {
-                    -- Path correcte: des de build/build_files/ cap a build/external/SDL3/lib/x64/
-                    "{COPY} \"$(SolutionDir)build\\external\\SDL3\\lib\\x64\\SDL3.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\"",
-                    "{COPY} \"$(SolutionDir)build\\external\\SDL3_image\\lib\\x64\\SDL3_image.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\"",
-                    "{COPY} \"$(SolutionDir)build\\external\\libjpeg-turbo\\bin\\jpeg62.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\""
+                    -- Copy DLLs using xcopy with proper quoting for paths with spaces
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\SDL3\\lib\\x64\\SDL3.dll" "$(SolutionDir)bin\\%{cfg.buildcfg}\\" 2>nul || exit 0',
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\SDL3_image\\lib\\x64\\SDL3_image.dll" "$(SolutionDir)bin\\%{cfg.buildcfg}\\" 2>nul || exit 0',
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\libjpeg-turbo\\bin\\jpeg62.dll" "$(SolutionDir)bin\\%{cfg.buildcfg}\\" 2>nul || exit 0'
                 }
                 
             -- SDL3 x86 específic
             filter { "system:windows", "platforms:x86" }
                 libdirs { "../bin/%{cfg.buildcfg}", sdl3_dir .. "/lib/x86", sdl3_image_dir .. "/lib/x86", libjpeg_turbo_dir .. "/lib", libpng_dir .. "/lib" }
                 postbuildcommands {
-                    -- Path correcte: des de build/build_files/ cap a build/external/SDL3/lib/x86/
-                    "{COPY} \"$(SolutionDir)build\\external\\SDL3\\lib\\x86\\SDL3.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\"",
-                    "{COPY} \"$(SolutionDir)build\\external\\SDL3_image\\lib\\x86\\SDL3_image.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\"",
-                    "{COPY} \"$(SolutionDir)build\\external\\libjpeg-turbo\\bin\\jpeg62.dll\" \"$(SolutionDir)bin\\%{cfg.buildcfg}\\\""
+                    -- Copy DLLs using xcopy with proper quoting for paths with spaces
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\SDL3\\lib\\x86\\SDL3.dll" "$(SolutionDir)bin\\%{cfg.buildcfg}\\" 2>nul || exit 0',
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\SDL3_image\\lib\\x86\\SDL3_image.dll" "$(SolutionDir)bin\\%{cfg.buildcfg)\\" 2>nul || exit 0',
+                    'xcopy /Y /D "$(SolutionDir)build\\external\\libjpeg-turbo\\bin\\jpeg62.dll" "$(SolutionDir)bin\\%{cfg.buildcfg}\\" 2>nul || exit 0'
                 }
 
         filter "system:linux"

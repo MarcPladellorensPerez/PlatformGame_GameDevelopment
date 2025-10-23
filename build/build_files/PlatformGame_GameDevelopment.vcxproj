@@ -113,9 +113,9 @@
       <AdditionalLibraryDirectories>..\..\bin\Debug;..\external\SDL3\lib\x64;..\external\SDL3_image\lib\x64;..\external\libjpeg-turbo\lib;..\external\libpng\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Debug\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Debug\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" &gt; nul)</Command>
+      <Command>xcopy /Y /D "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Debug\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Debug\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" 2&gt;nul || exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -137,9 +137,9 @@ IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q 
       <AdditionalLibraryDirectories>..\..\bin\Debug;..\external\SDL3\lib\x86;..\external\SDL3_image\lib\x86;..\external\libjpeg-turbo\lib;..\external\libpng\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Debug\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\Debug\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" &gt; nul)</Command>
+      <Command>xcopy /Y /D "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Debug\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\%{cfg.buildcfg)\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Debug\" 2&gt;nul || exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,9 +165,9 @@ IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q 
       <AdditionalLibraryDirectories>..\..\bin\Release;..\external\SDL3\lib\x64;..\external\SDL3_image\lib\x64;..\external\libjpeg-turbo\lib;..\external\libpng\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Release\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Release\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" &gt; nul)</Command>
+      <Command>xcopy /Y /D "$(SolutionDir)build\external\SDL3\lib\x64\SDL3.dll" "$(SolutionDir)bin\Release\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\SDL3_image\lib\x64\SDL3_image.dll" "$(SolutionDir)bin\Release\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" 2&gt;nul || exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -193,9 +193,9 @@ IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q 
       <AdditionalLibraryDirectories>..\..\bin\Release;..\external\SDL3\lib\x86;..\external\SDL3_image\lib\x86;..\external\libjpeg-turbo\lib;..\external\libpng\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Release\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\Release\" &gt; nul)
-IF EXIST "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" &gt; nul)</Command>
+      <Command>xcopy /Y /D "$(SolutionDir)build\external\SDL3\lib\x86\SDL3.dll" "$(SolutionDir)bin\Release\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\SDL3_image\lib\x86\SDL3_image.dll" "$(SolutionDir)bin\%{cfg.buildcfg)\" 2&gt;nul || exit 0
+xcopy /Y /D "$(SolutionDir)build\external\libjpeg-turbo\bin\jpeg62.dll" "$(SolutionDir)bin\Release\" 2&gt;nul || exit 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
