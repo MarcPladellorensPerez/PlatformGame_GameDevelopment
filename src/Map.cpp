@@ -76,7 +76,7 @@ TileSet* Map::GetTilesetFromTileId(int gid) const
 	TileSet* set = nullptr;
     for(const auto& tileset : mapData.tilesets) {
         set = tileset;
-        if (gid >= tileset->firstGid && gid < tileset->tileCount) {
+        if (gid >= tileset->firstGid && gid < tileset->firstGid + tileset->tileCount) {
 			break;
         }
 	}
@@ -259,6 +259,15 @@ bool Map::LoadProperties(pugi::xml_node& node, Properties& properties)
     }
 
     return ret;
+}
+
+// L10: TODO 7: Create a method to get the map size in pixels
+Vector2D Map::GetMapSizeInPixels()
+{
+    Vector2D sizeInPixels;
+    sizeInPixels.setX((float)(mapData.width * mapData.tileWidth));
+    sizeInPixels.setY((float)(mapData.height * mapData.tileHeight));
+    return sizeInPixels;
 }
 
 

@@ -8,6 +8,7 @@
 #include "Log.h"
 #include "Physics.h"
 #include "EntityManager.h"
+#include "Map.h"
 
 Player::Player() : Entity(EntityType::PLAYER)
 {
@@ -58,10 +59,18 @@ bool Player::Update(float dt)
 	GetPhysicsValues();
 	Move();
 	Jump();
+	Teleport();
 	ApplyPhysics();
 	Draw(dt);
 
 	return true;
+}
+
+void Player::Teleport() {
+	// Teleport the player to a specific position for testing purposes
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_T) == KEY_DOWN) {
+		pbody->SetPosition(96, 96);
+	}
 }
 
 void Player::GetPhysicsValues() {
@@ -112,6 +121,16 @@ void Player::Draw(float dt) {
 	pbody->GetPosition(x, y);
 	position.setX((float)x);
 	position.setY((float)y);
+
+	//L10: TODO 7: Center the camera on the player
+	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
+	float limitLeft = Engine::GetInstance().render->camera.w / 4;
+	float limitRight = mapSize.getX() - Engine::GetInstance().render->camera.w * 3 / 4;
+	if (position.getX() - limitLeft > 0 && position.getX() < limitRight) {
+		Engine::GetInstance().render->camera.x = -position.getX() + Engine::GetInstance().render->camera.w / 4;
+	}
+
+	// L10: TODO 5: Draw the player using the texture and the current animation frame
 	Engine::GetInstance().render->DrawTexture(texture, x - texW / 2, y - texH / 2, &animFrame);
 }
 
