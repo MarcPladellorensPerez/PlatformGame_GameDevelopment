@@ -12,7 +12,7 @@ class Player : public Entity
 public:
 
 	Player();
-	
+
 	virtual ~Player();
 
 	bool Awake();
@@ -27,6 +27,9 @@ public:
 	void OnCollision(PhysBody* physA, PhysBody* physB);
 	void OnCollisionEnd(PhysBody* physA, PhysBody* physB);
 
+	// Load player parameters from XML
+	bool LoadParameters(pugi::xml_node parameters);
+
 private:
 
 	void GetPhysicsValues();
@@ -38,22 +41,26 @@ private:
 
 public:
 
-	//Declare player parameters
+	// Player parameters (loaded from XML)
 	float speed = 4.0f;
-	SDL_Texture* texture = NULL;
+	float jumpForce = 2.5f;
 
+	SDL_Texture* texture = NULL;
 	int texW, texH;
 
-	//Audio fx
+	// Audio fx
 	int pickCoinFxId;
 
 	// L08 TODO 5: Add physics to the player - declare a Physics body
 	PhysBody* pbody;
-	float jumpForce = 2.5f; // The force to apply when jumping
 	bool isJumping = false; // Flag to check if the player is currently jumping
 
-private: 
+private:
 	b2Vec2 velocity;
 	AnimationSet anims;
 
+	// Configuration paths
+	std::string texturePath;
+	std::string animTsxPath;
+	std::string pickCoinFxPath;
 };

@@ -20,26 +20,52 @@ Player::~Player() {
 }
 
 bool Player::Awake() {
+	// Parameters are loaded in LoadParameters() now
+	return true;
+}
 
-	//L03: TODO 2: Initialize Player parameters
-	position = Vector2D(96, 96);
+// NEW METHOD: Load parameters from XML
+bool Player::LoadParameters(pugi::xml_node parameters) {
+
+	// Load initial position
+	position.setX(parameters.child("position").attribute("x").as_float());
+	position.setY(parameters.child("position").attribute("y").as_float());
+
+	// Load movement parameters
+	speed = parameters.child("movement").child("speed").attribute("value").as_float();
+	jumpForce = parameters.child("movement").child("jumpForce").attribute("value").as_float();
+
+	// Load texture info
+	texturePath = parameters.child("texture").attribute("path").as_string();
+	texW = parameters.child("texture").attribute("width").as_int();
+	texH = parameters.child("texture").attribute("height").as_int();
+
+	// Load animation path
+	animTsxPath = parameters.child("animations").attribute("tsx_path").as_string();
+
+	// Load audio paths
+	pickCoinFxPath = parameters.child("audio").child("fx").attribute("path").as_string();
+
+	LOG("Player parameters loaded successfully");
+	LOG("  Position: (%.2f, %.2f)", position.getX(), position.getY());
+	LOG("  Speed: %.2f", speed);
+	LOG("  Jump Force: %.2f", jumpForce);
+	LOG("  Texture: %s", texturePath.c_str());
+
 	return true;
 }
 
 bool Player::Start() {
 
-	// load
+	// Load animations using the path from config
 	std::unordered_map<int, std::string> aliases = { {0,"idle"},{11,"move"},{22,"jump"} };
-	anims.LoadFromTSX("Assets/Textures/PLayer2_Spritesheet.tsx", aliases);
+	anims.LoadFromTSX(animTsxPath.c_str(), aliases);
 	anims.SetCurrent("idle");
 
-	//L03: TODO 2: Initialize Player parameters
-	texture = Engine::GetInstance().textures->Load("Assets/Textures/player2_spritesheet.png");
+	// Load texture using the path from config
+	texture = Engine::GetInstance().textures->Load(texturePath.c_str());
 
 	// L08 TODO 5: Add physics to the player - initialize physics body
-	//Engine::GetInstance().textures->GetSize(texture, texW, texH);
-	texW = 32;
-	texH = 32;
 	pbody = Engine::GetInstance().physics->CreateCircle((int)position.getX(), (int)position.getY(), texW / 2, bodyType::DYNAMIC);
 
 	// L08 TODO 6: Assign player class (using "this") to the listener of the pbody. This makes the Physics module to call the OnCollision method
@@ -48,8 +74,8 @@ bool Player::Start() {
 	// L08 TODO 7: Assign collider type
 	pbody->ctype = ColliderType::PLAYER;
 
-	//initialize audio effect
-	pickCoinFxId = Engine::GetInstance().audio->LoadFx("Assets/Audio/Fx/coin-collision-sound-342335.wav");
+	// Initialize audio effect using the path from config
+	pickCoinFxId = Engine::GetInstance().audio->LoadFx(pickCoinFxPath.c_str());
 
 	return true;
 }
@@ -80,7 +106,7 @@ void Player::GetPhysicsValues() {
 }
 
 void Player::Move() {
-	
+
 	// Move left/right
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
 		velocity.x = -speed;
@@ -181,4 +207,3 @@ void Player::OnCollisionEnd(PhysBody* physA, PhysBody* physB)
 		break;
 	}
 }
-

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<player_config>
+    <!-- Initial spawn position -->
+    <position x="96" y="96"/>
+    
+    <!-- Movement parameters -->
+    <movement>
+        <speed value="4.0"/>
+        <jumpForce value="2.5"/>
+    </movement>
+    
+    <!-- Texture and sprite info -->
+    <texture path="Assets/Textures/player2_spritesheet.png" width="32" height="32"/>
+    
+    <!-- Animation configuration -->
+    <animations tsx_path="Assets/Textures/PLayer2_Spritesheet.tsx"/>
+    
+    <!-- Audio effects -->
+    <audio>
+        <fx name="pickCoin" path="Assets/Audio/Fx/coin-collision-sound-342335.wav"/>
+    </audio>
+</player_config>

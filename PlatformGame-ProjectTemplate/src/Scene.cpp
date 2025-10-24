@@ -29,7 +29,24 @@ bool Scene::Awake()
 
 	//L04: TODO 3b: Instantiate the player using the entity manager
 	player = std::dynamic_pointer_cast<Player>(Engine::GetInstance().entityManager->CreateEntity(EntityType::PLAYER));
-	
+
+	// NEW: Load player parameters from external XML file
+	pugi::xml_node playerConfigNode = configParameters.child("player");
+	if (playerConfigNode) {
+		std::string playerConfigPath = playerConfigNode.attribute("config_path").as_string();
+
+		pugi::xml_document playerConfigFile;
+		pugi::xml_parse_result result = playerConfigFile.load_file(playerConfigPath.c_str());
+
+		if (result) {
+			LOG("Player config file loaded: %s", playerConfigPath.c_str());
+			player->LoadParameters(playerConfigFile.child("player_config"));
+		}
+		else {
+			LOG("Error loading player config file: %s", result.description());
+		}
+	}
+
 	//L08: TODO 4: Create a new item using the entity manager and set the position to (200, 672) to test
 	std::shared_ptr<Item> item = std::dynamic_pointer_cast<Item>(Engine::GetInstance().entityManager->CreateEntity(EntityType::ITEM));
 	item->position = Vector2D(200, 672);

@@ -16,4 +16,9 @@
     <resizable value="false"/>
     <fullscreen_window value="false"/>
   </window>
+
+  <!-- Player configuration -->
+  <scene>
+    <player config_path="Assets/Config/player_config.xml"/>
+  </scene>
 </config>
