@@ -102,28 +102,26 @@ public:
 	std::shared_ptr<Physics> physics;
 
 
-private: 
+private:
 
 	// Delta time
-	float dt; 
-	//Frames since startup
-	int frames;
+	float dt;
 
 	// Calculate timing measures
-	// required variables are provided:
 	Timer startupTime;
 	PerfTimer frameTime;
 	PerfTimer lastSecFrameTime;
 
-	int frameCount = 0;
-	int framesPerSecond = 0;
-	int lastSecFrameCount = 0;
+	uint64_t frameCount = 0;
+	uint32_t framesPerSecond = 0;
+	uint32_t lastSecFrameCount = 0;
 
 	float averageFps = 0.0f;
-	int secondsSinceStartup = 0;
+	float secondsSinceStartup = 0.0f;
 
-	//Maximun frame duration in miliseconds.
-	int targetFrameRate = 60;
+	// FPS control
+	uint32_t targetFrameRate = 60;
+	uint32_t cappedMs = 1000 / targetFrameRate;
 
 	std::string gameTitle = "Platformer Game";
 

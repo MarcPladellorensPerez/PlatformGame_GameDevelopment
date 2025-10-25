@@ -73,22 +73,23 @@ bool Scene::PreUpdate()
 }
 
 // Called each loop iteration
+// Called each loop iteration
 bool Scene::Update(float dt)
 {
-	//L03 TODO 3: Make the camera movement independent of framerate
-	float camSpeed = 1;
+	// Camera movement independent of framerate
+	float camSpeed = 100.0f; // pixels per second
 
-	if(Engine::GetInstance().input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
-		Engine::GetInstance().render->camera.y -= (int)ceil(camSpeed * dt);
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
+		Engine::GetInstance().render->camera.y -= (int)ceil(camSpeed * dt / 1000.0f);
 
-	if(Engine::GetInstance().input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
-		Engine::GetInstance().render->camera.y += (int)ceil(camSpeed * dt);
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_DOWN) == KEY_REPEAT)
+		Engine::GetInstance().render->camera.y += (int)ceil(camSpeed * dt / 1000.0f);
 
-	if(Engine::GetInstance().input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT)
-		Engine::GetInstance().render->camera.x -= (int)ceil(camSpeed * dt);
-	
-	if(Engine::GetInstance().input.get()->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT)
-		Engine::GetInstance().render.get()->camera.x += (int)ceil(camSpeed * dt);
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LEFT) == KEY_REPEAT)
+		Engine::GetInstance().render->camera.x -= (int)ceil(camSpeed * dt / 1000.0f);
+
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT)
+		Engine::GetInstance().render->camera.x += (int)ceil(camSpeed * dt / 1000.0f);
 
 	return true;
 }

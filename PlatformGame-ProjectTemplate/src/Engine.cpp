@@ -177,25 +177,24 @@ void Engine::PrepareUpdate()
 }
 
 // ---------------------------------------------
+// ---------------------------------------------
 void Engine::FinishUpdate()
 {
-    // L03: TODO 1: Cap the framerate of the gameloop
+    // FPS calculation
     double currentDt = frameTime.ReadMs();
-	float maxFrameDuration = 1000.0f / targetFrameRate;
-    if (targetFrameRate > 0 && currentDt < maxFrameDuration) {
-        Uint32 delay = (Uint32)(maxFrameDuration - currentDt);
 
-        // L03: TODO 2: Measure accurately the amount of time SDL_Delay() actually waits compared to what was expected
-        PerfTimer delayTimer = PerfTimer();
-        SDL_Delay(delay);
-        //Measure accurately the amount of time SDL_Delay() actually waits compared to what was expected
-        //LOG("We waited for %I32u ms and got back in %f ms",delay,delayTimer.ReadMs()); // Uncomment this line to see the results
+    // Cap framerate if needed
+    if (targetFrameRate > 0) {
+        cappedMs = 1000 / targetFrameRate;
+        if (currentDt < cappedMs) {
+            uint32_t delay = (uint32_t)(cappedMs - currentDt);
+            SDL_Delay(delay);
+        }
     }
 
-	// L2: TODO 4: Calculate:
-	
-    // Amount of frames since startup
+    // Update frame count
     frameCount++;
+    lastSecFrameCount++;
 
     // Amount of time since game start (use a low resolution timer)
     secondsSinceStartup = startupTime.ReadSec();
@@ -203,29 +202,40 @@ void Engine::FinishUpdate()
     // Amount of ms took the last update (dt)
     dt = (float)frameTime.ReadMs();
 
-    // Amount of frames during the last second
-    lastSecFrameCount++;
-
-    // Average FPS for the whole game life
+    // Calculate average FPS
     if (lastSecFrameTime.ReadMs() > 1000) {
         lastSecFrameTime.Start();
-        averageFps = (averageFps + lastSecFrameCount) / 2;
         framesPerSecond = lastSecFrameCount;
         lastSecFrameCount = 0;
+
+        // Calculate true average (cumulative)
+        if (averageFps == 0.0f) {
+            averageFps = (float)framesPerSecond;
+        }
+        else {
+            averageFps = (averageFps + framesPerSecond) / 2.0f;
+        }
     }
 
-    // Shows the time measurements in the window title
-    // check sprintf formats here https://cplusplus.com/reference/cstdio/printf/
+    // Get vsync status
+    bool vsyncEnabled = false;
+    if (render && render->renderer) {
+        int vsync = 0;
+        SDL_GetRenderVSync(render->renderer, &vsync);
+        vsyncEnabled = (vsync == 1);
+    }
+
+    // Format window title with FPS info
+    // Format: "FPS: XX / Avg.FPS: XX.XX / Last-frame MS: XX.XX / Vsync: on/off"
     std::stringstream ss;
-    ss << gameTitle << ": Av.FPS: " << std::fixed << std::setprecision(2) << averageFps
-        << " Last sec frames: " << framesPerSecond
-        << " Last dt: " << std::fixed << std::setprecision(3) << dt
-        << " Time since startup: " << secondsSinceStartup
-        << " Frame Count: " << frameCount;
+    ss << gameTitle
+        << " | FPS: " << framesPerSecond
+        << " / Avg.FPS: " << std::fixed << std::setprecision(2) << averageFps
+        << " / Last-frame MS: " << std::fixed << std::setprecision(2) << dt
+        << " / Vsync: " << (vsyncEnabled ? "on" : "off");
 
     std::string titleStr = ss.str();
-
-    window.get()->SetTitle(titleStr.c_str());
+    window->SetTitle(titleStr.c_str());
 }
 
 
