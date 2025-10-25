@@ -24,7 +24,7 @@ Engine::Engine() {
     startupTime = Timer();
     frameTime = PerfTimer();
     lastSecFrameTime = PerfTimer();
-    frames = 0;
+    frameCount= 0;
 
     // L4: TODO 1: Add the EntityManager Module to the Engine
     
