@@ -17,17 +17,17 @@
 // Constructor
 Engine::Engine() {
 
-	LOG("Constructor Engine::Engine");
+    LOG("Constructor Engine::Engine");
 
     // L2: TODO 3: Measure the amount of ms that takes to execute the Engine constructor and LOG the result
-	Timer timer = Timer();
+    Timer timer = Timer();
     startupTime = Timer();
     frameTime = PerfTimer();
     lastSecFrameTime = PerfTimer();
-    frameCount= 0;
+    frameCount = 0;
 
     // L4: TODO 1: Add the EntityManager Module to the Engine
-    
+
     // Modules
     window = std::make_shared<Window>();
     input = std::make_shared<Input>();
@@ -56,7 +56,7 @@ Engine::Engine() {
     AddModule(std::static_pointer_cast<Module>(render));
 
     // L2: TODO 3: Log the result of the timer
-	LOG("Timer App Constructor: %f", timer.ReadMSec());
+    LOG("Timer App Constructor: %f", timer.ReadMSec());
 }
 
 // Static method to get the instance of the Engine class, following the singleton pattern
@@ -65,7 +65,7 @@ Engine& Engine::GetInstance() {
     return instance;
 }
 
-void Engine::AddModule(std::shared_ptr<Module> module){
+void Engine::AddModule(std::shared_ptr<Module> module) {
     module->Init();
     moduleList.push_back(module);
 }
@@ -88,16 +88,16 @@ bool Engine::Awake() {
     bool result = true;
     for (const auto& module : moduleList) {
         // L05: TODO 4: Call the LoadParameters function for each module
-		module->LoadParameters(configFile.child("config").child(module.get()->name.c_str()));
-        result =  module->Awake();
+        module->LoadParameters(configFile.child("config").child(module.get()->name.c_str()));
+        result = module->Awake();
 
         if (!result) {
-			break;
-		}
+            break;
+        }
     }
 
     // L2: TODO 3: Log the result of the timer
-	LOG("Timer App Awake(): %f", timer.ReadMSec());
+    LOG("Timer App Awake(): %f", timer.ReadMSec());
 
     return result;
 }
@@ -120,8 +120,8 @@ bool Engine::Start() {
     }
 
     // L2: TODO 3: Log the result of the timer
-	LOG("Timer App CleanUp(): %f", timer.ReadMSec());
-	
+    LOG("Timer App CleanUp(): %f", timer.ReadMSec());
+
     return result;
 }
 
@@ -131,8 +131,15 @@ bool Engine::Update() {
     bool ret = true;
     PrepareUpdate();
 
+    // Check for quit
     if (input->GetWindowEvent(WE_QUIT) == true)
         ret = false;
+
+    // Toggle debug help with H key
+    if (input->GetKey(SDL_SCANCODE_H) == KEY_DOWN) {
+        showDebugHelp = !showDebugHelp;
+        LOG("Debug Help: %s", showDebugHelp ? "SHOWN" : "HIDDEN");
+    }
 
     if (ret == true)
         ret = PreUpdate();
@@ -165,7 +172,7 @@ bool Engine::CleanUp() {
     }
 
     // L2: TODO 3: Log the result of the timer
-	LOG("Timer App CleanUp(): %f", timer.ReadMSec());
+    LOG("Timer App CleanUp(): %f", timer.ReadMSec());
 
     return result;
 }
@@ -176,7 +183,6 @@ void Engine::PrepareUpdate()
     frameTime.Start();
 }
 
-// ---------------------------------------------
 // ---------------------------------------------
 void Engine::FinishUpdate()
 {
@@ -284,6 +290,32 @@ bool Engine::PostUpdate()
     return result;
 }
 
+// Draw debug help menu
+void Engine::DrawDebugHelp()
+{
+    if (!showDebugHelp) return;
+
+    // Background semi-transparent
+    SDL_Rect helpRect = { 10, 10, 400, 180 };
+    render->DrawRectangle(helpRect, 0, 0, 0, 200, true, false);
+
+    // Border
+    render->DrawRectangle(helpRect, 255, 255, 0, 255, false, false);
+
+    // Log debug keys to console (only once)
+    static bool firstTime = true;
+    if (firstTime) {
+        LOG("=== DEBUG HELP MENU ===");
+        LOG("H     - Toggle this help");
+        LOG("F9    - Show/Hide colliders");
+        LOG("F10   - God Mode");
+        LOG("F11   - Toggle FPS cap 30/60");
+        LOG("ESC   - Exit game");
+        LOG("=======================");
+        firstTime = false;
+    }
+}
+
 // Load config from XML file
 bool Engine::LoadConfig()
 {
@@ -306,5 +338,3 @@ bool Engine::LoadConfig()
 
     return ret;
 }
-
-
