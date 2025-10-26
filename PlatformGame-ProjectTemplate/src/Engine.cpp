@@ -173,6 +173,18 @@ bool Engine::Update() {
         LOG("God Mode: %s", godMode ? "ON" : "OFF");
     }
 
+    // Toggle FPS cap between 30 and 60 with F11
+    if (input->GetKey(SDL_SCANCODE_F11) == KEY_DOWN) {
+        if (targetFrameRate == 60) {
+            targetFrameRate = 30;
+            LOG("FPS Cap: 30");
+        }
+        else {
+            targetFrameRate = 60;
+            LOG("FPS Cap: 60");
+        }
+    }
+
     if (ret == true)
         ret = PreUpdate();
 
