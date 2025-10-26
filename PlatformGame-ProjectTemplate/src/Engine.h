@@ -128,4 +128,5 @@ private:
 
 	// Debug options
 	bool showDebugHelp = false;
+	bool debugColliders = false;
 };

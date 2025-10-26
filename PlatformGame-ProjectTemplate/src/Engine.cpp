@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <sstream>
 #include <iomanip>
 
@@ -140,6 +140,14 @@ bool Engine::Update() {
         showDebugHelp = !showDebugHelp;
         LOG("Debug Help: %s", showDebugHelp ? "SHOWN" : "HIDDEN");
     }
+
+    // Toggle collider visualization with F9
+    if (input->GetKey(SDL_SCANCODE_F9) == KEY_DOWN) {
+        debugColliders = !debugColliders;
+        physics->debug = debugColliders;
+        LOG("Debug Colliders: %s", debugColliders ? "ON" : "OFF");
+    }
+
 
     if (ret == true)
         ret = PreUpdate();
@@ -296,24 +304,20 @@ void Engine::DrawDebugHelp()
     if (!showDebugHelp) return;
 
     // Background semi-transparent
-    SDL_Rect helpRect = { 10, 10, 400, 180 };
+    SDL_Rect helpRect = { 10, 10, 400, 200 };
     render->DrawRectangle(helpRect, 0, 0, 0, 200, true, false);
 
     // Border
     render->DrawRectangle(helpRect, 255, 255, 0, 255, false, false);
 
-    // Log debug keys to console (only once)
-    static bool firstTime = true;
-    if (firstTime) {
-        LOG("=== DEBUG HELP MENU ===");
-        LOG("H     - Toggle this help");
-        LOG("F9    - Show/Hide colliders");
-        LOG("F10   - God Mode");
-        LOG("F11   - Toggle FPS cap 30/60");
-        LOG("ESC   - Exit game");
-        LOG("=======================");
-        firstTime = false;
-    }
+    // Log debug keys to console (updated each time menu is shown)
+    LOG("=== DEBUG HELP MENU ===");
+    LOG("H     - Toggle this help");
+    LOG("F9    - Show/Hide colliders [%s]", debugColliders ? "ON" : "OFF");
+    LOG("F10   - God Mode [OFF]");
+    LOG("F11   - Toggle FPS cap 30/60");
+    LOG("ESC   - Exit game");
+    LOG("=======================");
 }
 
 // Load config from XML file

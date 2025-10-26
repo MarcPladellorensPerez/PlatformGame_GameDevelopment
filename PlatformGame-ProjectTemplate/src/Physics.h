@@ -113,14 +113,17 @@ private:
     static void DrawStringStub(b2Vec2 p, const char* s, b2HexColor c, void* ctx);
     static void DrawTransformStub(b2Transform xf, void* ctx);
 
-private:
+public:
 
     // Debug mode
     bool debug;
+
+private:
 
     // Box2D World (id instead of pointer)
     b2WorldId world;
 
     // List of physics bodies
     std::list<PhysBody*> bodiesToDelete;
+
 };
