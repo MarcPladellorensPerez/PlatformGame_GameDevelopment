@@ -16,7 +16,7 @@ class Entity : public std::enable_shared_from_this<Entity>
 {
 public:
 
-	Entity() {}
+	Entity() : type(EntityType::UNKNOWN), active(true) {}
 	Entity(EntityType type) : type(type), active(true) {}
 
 	virtual bool Awake()
@@ -76,8 +76,6 @@ public:
 	EntityType type;
 	bool active = true;
 
-	// Possible properties, it depends on how generic we
-	// want our Entity class, maybe it's not renderable...
-	Vector2D position;       
+	Vector2D position;
 	bool renderable = true;
 };

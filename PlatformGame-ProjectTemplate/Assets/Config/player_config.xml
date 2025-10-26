@@ -7,6 +7,10 @@
     <movement>
         <speed value="4.0"/>
         <jumpForce value="2.5"/>
+        <!-- Advanced movement -->
+        <dashForce value="20.0"/>      
+        <dashDuration value="200"/>    
+        <dashCooldown value="500"/>    
     </movement>
     
     <!-- Texture and sprite info -->
