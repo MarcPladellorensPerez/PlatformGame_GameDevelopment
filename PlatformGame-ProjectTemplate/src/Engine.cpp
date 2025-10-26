@@ -138,7 +138,20 @@ bool Engine::Update() {
     // Toggle debug help with H key
     if (input->GetKey(SDL_SCANCODE_H) == KEY_DOWN) {
         showDebugHelp = !showDebugHelp;
-        LOG("Debug Help: %s", showDebugHelp ? "SHOWN" : "HIDDEN");
+
+		// Debug help menu 
+        if (showDebugHelp) {
+            LOG("=== DEBUG HELP MENU ===");
+            LOG("H     - Toggle this help");
+            LOG("F9    - Show/Hide colliders [%s]", debugColliders ? "ON" : "OFF");
+            LOG("F10   - God Mode [%s]", godMode ? "ON" : "OFF");
+            LOG("F11   - Toggle FPS cap [%d]", targetFrameRate);
+            LOG("ESC   - Exit game");
+            LOG("=======================");
+        }
+        else {
+            LOG("Debug Help: HIDDEN");
+        }
     }
 
     // Toggle collider visualization with F9
@@ -320,15 +333,6 @@ void Engine::DrawDebugHelp()
 
     // Border
     render->DrawRectangle(helpRect, 255, 255, 0, 255, false, false);
-
-    // Log debug keys to console
-    LOG("=== DEBUG HELP MENU ===");
-    LOG("H     - Toggle this help");
-    LOG("F9    - Show/Hide colliders [%s]", debugColliders ? "ON" : "OFF");
-    LOG("F10   - God Mode [%s]", godMode ? "ON" : "OFF");
-    LOG("F11   - Toggle FPS cap 30/60");
-    LOG("ESC   - Exit game");
-    LOG("=======================");
 }
 
 // Load config from XML file
