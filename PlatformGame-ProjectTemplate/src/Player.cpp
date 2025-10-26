@@ -83,8 +83,16 @@ bool Player::Start() {
 bool Player::Update(float dt)
 {
 	GetPhysicsValues();
-	Move();
-	Jump();
+
+	// Different movement logic for God Mode
+	if (godMode) {
+		MoveGodMode();
+	}
+	else {
+		Move();
+		Jump();
+	}
+
 	Teleport();
 	ApplyPhysics();
 	Draw(dt);
@@ -118,6 +126,34 @@ void Player::Move() {
 	}
 }
 
+// God Mode movement (fly in all directions)
+void Player::MoveGodMode() {
+	float godSpeed = speed * 2.0f; // Faster in god mode
+
+	velocity = { 0, 0 }; // Reset velocity
+
+	// Move in all 4 directions
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) {
+		velocity.y = -godSpeed;
+	}
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_S) == KEY_REPEAT) {
+		velocity.y = godSpeed;
+	}
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
+		velocity.x = -godSpeed;
+		anims.SetCurrent("move");
+	}
+	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_D) == KEY_REPEAT) {
+		velocity.x = godSpeed;
+		anims.SetCurrent("move");
+	}
+
+	// Keep idle animation if not moving
+	if (velocity.x == 0 && velocity.y == 0) {
+		anims.SetCurrent("idle");
+	}
+}
+
 void Player::Jump() {
 	// This function can be used for more complex jump logic if needed
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN && isJumping == false) {
@@ -128,13 +164,32 @@ void Player::Jump() {
 }
 
 void Player::ApplyPhysics() {
-	// Preserve vertical speed while jumping
-	if (isJumping == true) {
-		velocity.y = Engine::GetInstance().physics->GetYVelocity(pbody);
-	}
+	// In God Mode, disable collisions and gravity
+	if (godMode) {
+		// Disable gravity
+		b2Body_SetGravityScale(pbody->body, 0.0f);
 
-	// Apply velocity via helper
-	Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
+		// Change body type to kinematic (no collision response)
+		b2Body_SetType(pbody->body, b2_kinematicBody);
+
+		// Apply velocity directly
+		Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
+	}
+	else {
+		// Re-enable gravity
+		b2Body_SetGravityScale(pbody->body, 1.0f);
+
+		// Restore to dynamic body
+		b2Body_SetType(pbody->body, b2_dynamicBody);
+
+		// Preserve vertical speed while jumping
+		if (isJumping == true) {
+			velocity.y = Engine::GetInstance().physics->GetYVelocity(pbody);
+		}
+
+		// Apply velocity via helper
+		Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
+	}
 }
 
 void Player::Draw(float dt) {
@@ -169,6 +224,11 @@ bool Player::CleanUp()
 
 // L08 TODO 6: Define OnCollision function for the player. 
 void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
+	// Ignore damage in God Mode
+	if (godMode && physB->ctype != ColliderType::ITEM) {
+		return; // Don't process collisions except items
+	}
+
 	switch (physB->ctype)
 	{
 	case ColliderType::PLATFORM:

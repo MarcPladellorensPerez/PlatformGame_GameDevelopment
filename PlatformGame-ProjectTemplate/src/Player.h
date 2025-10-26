@@ -34,6 +34,7 @@ private:
 
 	void GetPhysicsValues();
 	void Move();
+	void MoveGodMode();
 	void Jump();
 	void Teleport();
 	void ApplyPhysics();
@@ -54,6 +55,9 @@ public:
 	// L08 TODO 5: Add physics to the player - declare a Physics body
 	PhysBody* pbody;
 	bool isJumping = false; // Flag to check if the player is currently jumping
+
+	// God mode
+	bool godMode = false;
 
 private:
 	b2Vec2 velocity;

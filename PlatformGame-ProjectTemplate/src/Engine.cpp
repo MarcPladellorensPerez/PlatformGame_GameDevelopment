@@ -148,6 +148,17 @@ bool Engine::Update() {
         LOG("Debug Colliders: %s", debugColliders ? "ON" : "OFF");
     }
 
+    // Toggle God Mode with F10
+    if (input->GetKey(SDL_SCANCODE_F10) == KEY_DOWN) {
+        godMode = !godMode;
+
+        // Apply god mode to player
+        if (scene && scene->GetPlayer()) {
+            scene->GetPlayer()->godMode = godMode;
+        }
+
+        LOG("God Mode: %s", godMode ? "ON" : "OFF");
+    }
 
     if (ret == true)
         ret = PreUpdate();
@@ -310,11 +321,11 @@ void Engine::DrawDebugHelp()
     // Border
     render->DrawRectangle(helpRect, 255, 255, 0, 255, false, false);
 
-    // Log debug keys to console (updated each time menu is shown)
+    // Log debug keys to console
     LOG("=== DEBUG HELP MENU ===");
     LOG("H     - Toggle this help");
     LOG("F9    - Show/Hide colliders [%s]", debugColliders ? "ON" : "OFF");
-    LOG("F10   - God Mode [OFF]");
+    LOG("F10   - God Mode [%s]", godMode ? "ON" : "OFF");
     LOG("F11   - Toggle FPS cap 30/60");
     LOG("ESC   - Exit game");
     LOG("=======================");
