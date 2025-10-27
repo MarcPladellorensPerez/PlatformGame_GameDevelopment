@@ -110,6 +110,12 @@ bool Engine::Start() {
 
     LOG("Engine::Start");
 
+    // NUEVO: Cargar la textura del help menu
+    helpMenuTexture = textures->Load("Assets/Textures/help_menu.png");
+    if (helpMenuTexture == nullptr) {
+        LOG("WARNING: Could not load help menu texture. Using fallback rectangle.");
+    }
+
     //Iterates the module list and calls Start on each module
     bool result = true;
     for (const auto& module : moduleList) {
@@ -120,7 +126,7 @@ bool Engine::Start() {
     }
 
     // L2: TODO 3: Log the result of the timer
-    LOG("Timer App CleanUp(): %f", timer.ReadMSec());
+    LOG("Timer App Start(): %f", timer.ReadMSec());
 
     return result;
 }
@@ -139,7 +145,7 @@ bool Engine::Update() {
     if (input->GetKey(SDL_SCANCODE_H) == KEY_DOWN) {
         showDebugHelp = !showDebugHelp;
 
-		// Debug help menu 
+        // Debug help menu 
         if (showDebugHelp) {
             LOG("=== DEBUG HELP MENU ===");
             LOG("H     - Toggle this help");
@@ -201,10 +207,16 @@ bool Engine::Update() {
 // Called before quitting
 bool Engine::CleanUp() {
 
-    // L2: TODO 3: Measure the amount of ms that takes to execute the Start() and LOG the result
+    // L2: TODO 3: Measure the amount of ms that takes to execute the CleanUp() and LOG the result
     Timer timer = Timer();
 
     LOG("Engine::CleanUp");
+
+    // NUEVO: Liberar la textura del help menu
+    if (helpMenuTexture != nullptr) {
+        textures->UnLoad(helpMenuTexture);
+        helpMenuTexture = nullptr;
+    }
 
     //Iterates the module list and calls CleanUp on each module
     bool result = true;
@@ -339,12 +351,19 @@ void Engine::DrawDebugHelp()
 {
     if (!showDebugHelp) return;
 
-    // Background semi-transparent
-    SDL_Rect helpRect = { 10, 10, 400, 200 };
-    render->DrawRectangle(helpRect, 0, 0, 0, 200, true, false);
+    int screenX = 10 - render->camera.x;
+    int screenY = 10 - render->camera.y;
 
-    // Border
-    render->DrawRectangle(helpRect, 255, 255, 0, 255, false, false);
+    if (helpMenuTexture != nullptr) {
+        render->DrawTexture(helpMenuTexture, screenX, screenY, nullptr, 1.0f, 0.0, INT_MAX, INT_MAX);
+    }
+    else {
+        SDL_Rect helpRect = { screenX, screenY, 400, 200 };
+
+        render->DrawRectangle(helpRect, 0, 0, 0, 200, true, true);
+
+        render->DrawRectangle(helpRect, 255, 255, 0, 255, false, true);
+    }
 }
 
 // Load config from XML file

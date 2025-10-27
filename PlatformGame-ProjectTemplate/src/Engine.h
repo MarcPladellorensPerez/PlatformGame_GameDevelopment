@@ -6,6 +6,7 @@
 #include "Timer.h"
 #include "PerfTimer.h"
 #include "pugixml.hpp"
+#include <SDL3/SDL.h>
 
 // Modules
 class Window;
@@ -130,4 +131,7 @@ private:
 	bool showDebugHelp = false;
 	bool debugColliders = false;
 	bool godMode = false;
+
+	// Textura para el help menu
+	SDL_Texture* helpMenuTexture = nullptr;
 };
