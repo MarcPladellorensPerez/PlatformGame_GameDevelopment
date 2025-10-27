@@ -1,4 +1,4 @@
-
+﻿
 #include "Engine.h"
 #include "Render.h"
 #include "Textures.h"
@@ -187,10 +187,33 @@ bool Map::Load(std::string path, std::string fileName)
                 for (int i = 0; i < mapData.height; i++) {
                     for (int j = 0; j < mapData.width; j++) {
                         int gid = mapLayer->Get(i, j);
+
+                        // gid == 49 → PLATFORM (collider normal)
                         if (gid == 49) {
                             Vector2D mapCoord = MapToWorld(i, j);
-                            PhysBody* c1 = Engine::GetInstance().physics.get()->CreateRectangle(mapCoord.getX()+ mapData.tileWidth/2, mapCoord.getY()+ mapData.tileHeight/2, mapData.tileWidth, mapData.tileHeight, STATIC);
+                            PhysBody* c1 = Engine::GetInstance().physics.get()->CreateRectangle(
+                                mapCoord.getX() + mapData.tileWidth / 2,
+                                mapCoord.getY() + mapData.tileHeight / 2,
+                                mapData.tileWidth,
+                                mapData.tileHeight,
+                                STATIC
+                            );
                             c1->ctype = ColliderType::PLATFORM;
+                        }
+
+                        // NUEVO: gid == 50 → DAMAGE (spikes/traps)
+                        // Necesitas añadir este tile en tu tileset MapMetadata
+                        else if (gid == 50) {
+                            Vector2D mapCoord = MapToWorld(i, j);
+                            PhysBody* c2 = Engine::GetInstance().physics.get()->CreateRectangle(
+                                mapCoord.getX() + mapData.tileWidth / 2,
+                                mapCoord.getY() + mapData.tileHeight / 2,
+                                mapData.tileWidth,
+                                mapData.tileHeight,
+                                STATIC
+                            );
+                            c2->ctype = ColliderType::ENEMY; // Usamos ENEMY para damage
+                            LOG("Created DAMAGE collider at (%d, %d)", (int)mapCoord.getX(), (int)mapCoord.getY());
                         }
                     }
                 }

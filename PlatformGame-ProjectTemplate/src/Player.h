@@ -41,7 +41,12 @@ private:
 	void Teleport();
 	void ApplyPhysics();
 	void Draw(float dt);
-	void UpdateCamera();  // Función separada para actualizar la cámara
+	void UpdateCamera();
+
+	// Sistema de muerte y respawn
+	void CheckDeath();
+	void Die();
+	void Respawn();
 
 public:
 
@@ -61,18 +66,24 @@ public:
 
 	// L08 TODO 5: Add physics to the player - declare a Physics body
 	PhysBody* pbody = nullptr;
-	bool isJumping = false;       // Flag to check if the player is currently jumping
-	bool hasDoubleJump = false;   // Flag for double jump availability
-	bool spaceWasReleased = false; // Flag to track if space was released after first jump
+	bool isJumping = false;
+	bool hasDoubleJump = false;
+	bool spaceWasReleased = false;
 
 	// Dash state
 	bool isDashing = false;
-	float dashTimer = 0.0f;       // Current dash duration timer
-	float dashCooldownTimer = 0.0f; // Cooldown timer
-	int dashDirection = 0;        // -1 left, 1 right, 0 none
+	float dashTimer = 0.0f;
+	float dashCooldownTimer = 0.0f;
+	int dashDirection = 0;
 
 	// God mode
 	bool godMode = false;
+
+	// Death system
+	bool isDead = false;
+	float respawnTimer = 0.0f;
+	float respawnDelay = 1000.0f; // 1 second delay
+	Vector2D spawnPosition;       // Initial spawn position
 
 private:
 	b2Vec2 velocity = { 0.0f, 0.0f };

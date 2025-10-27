@@ -20,16 +20,17 @@ Player::~Player() {
 }
 
 bool Player::Awake() {
-	// Parameters are loaded in LoadParameters() now
 	return true;
 }
 
-// Load parameters from XML
 bool Player::LoadParameters(pugi::xml_node parameters) {
 
-	// Load initial position
+	// Load initial position (SPAWN POSITION)
 	position.setX(parameters.child("position").attribute("x").as_float());
 	position.setY(parameters.child("position").attribute("y").as_float());
+
+	// NUEVO: Guardar spawn position para respawn
+	spawnPosition = position;
 
 	// Load movement parameters
 	speed = parameters.child("movement").child("speed").attribute("value").as_float();
@@ -53,10 +54,7 @@ bool Player::LoadParameters(pugi::xml_node parameters) {
 
 	LOG("Player parameters loaded successfully");
 	LOG("  Position: (%.2f, %.2f)", position.getX(), position.getY());
-	LOG("  Speed: %.2f", speed);
-	LOG("  Jump Force: %.2f", jumpForce);
-	LOG("  Dash Force: %.2f", dashForce);
-	LOG("  Texture: %s", texturePath.c_str());
+	LOG("  Spawn Position: (%.2f, %.2f)", spawnPosition.getX(), spawnPosition.getY());
 
 	return true;
 }
@@ -74,7 +72,7 @@ bool Player::Start() {
 	// L08 TODO 5: Add physics to the player - initialize physics body
 	pbody = Engine::GetInstance().physics->CreateCircle((int)position.getX(), (int)position.getY(), texW / 2, bodyType::DYNAMIC);
 
-	// L08 TODO 6: Assign player class (using "this") to the listener of the pbody. This makes the Physics module to call the OnCollision method
+	// L08 TODO 6: Assign player class (using "this") to the listener of the pbody
 	pbody->listener = this;
 
 	// L08 TODO 7: Assign collider type
@@ -88,6 +86,15 @@ bool Player::Start() {
 
 bool Player::Update(float dt)
 {
+	// NUEVO: Si está muerto, solo actualizar respawn timer
+	if (isDead) {
+		respawnTimer -= dt;
+		if (respawnTimer <= 0.0f) {
+			Respawn();
+		}
+		return true;
+	}
+
 	GetPhysicsValues();
 
 	// Different movement logic for God Mode
@@ -97,28 +104,24 @@ bool Player::Update(float dt)
 	else {
 		// Update dash cooldown
 		if (dashCooldownTimer > 0.0f) {
-			dashCooldownTimer -= dt; // dt is in milliseconds
+			dashCooldownTimer -= dt;
 		}
 
 		// Update dash state
 		if (isDashing) {
-			dashTimer -= dt; // dt is in milliseconds
+			dashTimer -= dt;
 			if (dashTimer <= 0.0f) {
 				isDashing = false;
-				LOG("Dash ended");
 			}
-		}
-
-		// Debug: Log jump state when in air and space is pressed
-		if (isJumping && Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN) {
-			LOG("[UPDATE] Jump state: isJumping=%d, hasDoubleJump=%d, spaceWasReleased=%d",
-				isJumping, hasDoubleJump, spaceWasReleased);
 		}
 
 		Move();
 		Jump();
 		DoubleJump();
 		Dash();
+
+		// NUEVO: Check death conditions
+		CheckDeath();
 	}
 
 	Teleport();
@@ -129,54 +132,91 @@ bool Player::Update(float dt)
 }
 
 void Player::Teleport() {
-	// Teleport the player to a specific position for testing purposes
+	// Teleport the player to spawn position
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_T) == KEY_DOWN) {
-		// Resetear velocidad ANTES de mover
-		Engine::GetInstance().physics->SetLinearVelocity(pbody, 0.0f, 0.0f);
-
-		// Mover el jugador
-		pbody->SetPosition(96, 96);
-
-		// Forzar actualización inmediata de position
-		position.setX(96.0f);
-		position.setY(96.0f);
-
-		// Resetear estados de salto
-		isJumping = false;
-		hasDoubleJump = false;
-		spaceWasReleased = false;
-		isDashing = false;
-
-		// Ver qué está pasando
-		LOG("=== TELEPORT DEBUG ===");
-		LOG("Player position set to: (%.2f, %.2f)", position.getX(), position.getY());
-		LOG("Camera BEFORE: x=%d, y=%d", Engine::GetInstance().render->camera.x, Engine::GetInstance().render->camera.y);
-
-		// Forzar actualización inmediata de la cámara
-		UpdateCamera();
-
-		LOG("Camera AFTER: x=%d, y=%d", Engine::GetInstance().render->camera.x, Engine::GetInstance().render->camera.y);
-		LOG("======================");
+		Respawn();
+		LOG("Player teleported to spawn position");
 	}
 }
 
+// NUEVO: Check if player should die
+void Player::CheckDeath() {
+	// Get map size
+	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
+
+	// Death by falling (below map)
+	if (position.getY() > mapSize.getY() + 100.0f) {
+		LOG("Player died: Fell off the map!");
+		Die();
+	}
+
+	// Death by going above map (optional, uncomment if needed)
+	// if (position.getY() < -100.0f) {
+	//     LOG("Player died: Went above the map!");
+	//     Die();
+	// }
+}
+
+// NUEVO: Handle death
+void Player::Die() {
+	if (isDead || godMode) return; // Can't die in god mode
+
+	isDead = true;
+	respawnTimer = respawnDelay;
+
+	// Stop all movement
+	Engine::GetInstance().physics->SetLinearVelocity(pbody, 0.0f, 0.0f);
+
+	// Reset states
+	isJumping = false;
+	hasDoubleJump = false;
+	spaceWasReleased = false;
+	isDashing = false;
+
+	LOG("=== PLAYER DIED ===");
+	LOG("Respawning in %.2f ms...", respawnDelay);
+}
+
+// NUEVO: Handle respawn
+void Player::Respawn() {
+	LOG("=== PLAYER RESPAWNED ===");
+
+	isDead = false;
+	respawnTimer = 0.0f;
+
+	// Reset velocity
+	Engine::GetInstance().physics->SetLinearVelocity(pbody, 0.0f, 0.0f);
+
+	// Move to spawn position
+	pbody->SetPosition((int)spawnPosition.getX(), (int)spawnPosition.getY());
+	position = spawnPosition;
+
+	// Reset states
+	isJumping = false;
+	hasDoubleJump = false;
+	spaceWasReleased = false;
+	isDashing = false;
+	dashCooldownTimer = 0.0f;
+
+	// Reset animation
+	anims.SetCurrent("idle");
+
+	LOG("Player respawned at (%.2f, %.2f)", spawnPosition.getX(), spawnPosition.getY());
+}
+
 void Player::GetPhysicsValues() {
-	// Read current velocity
 	velocity = Engine::GetInstance().physics->GetLinearVelocity(pbody);
 
-	// Don't reset horizontal velocity during dash
 	if (!isDashing) {
-		velocity = { 0.0f, velocity.y }; // Reset horizontal velocity by default
+		velocity = { 0.0f, velocity.y };
 	}
 }
 
 void Player::Move() {
-	// Don't override velocity during dash
 	if (isDashing) {
 		return;
 	}
 
-	// Move left/right
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
 		velocity.x = -speed;
 		anims.SetCurrent("move");
@@ -187,13 +227,11 @@ void Player::Move() {
 	}
 }
 
-// God Mode movement (fly in all directions)
 void Player::MoveGodMode() {
-	float godSpeed = speed * 2.0f; // Faster in god mode
+	float godSpeed = speed * 2.0f;
 
-	velocity = { 0.0f, 0.0f }; // Reset velocity
+	velocity = { 0.0f, 0.0f };
 
-	// Move in all 4 directions
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_W) == KEY_REPEAT) {
 		velocity.y = -godSpeed;
 	}
@@ -209,80 +247,48 @@ void Player::MoveGodMode() {
 		anims.SetCurrent("move");
 	}
 
-	// Keep idle animation if not moving
 	if (velocity.x == 0.0f && velocity.y == 0.0f) {
 		anims.SetCurrent("idle");
 	}
 }
 
 void Player::Jump() {
-	// Basic jump - only when on ground
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN && !isJumping) {
 		Engine::GetInstance().physics->ApplyLinearImpulseToCenter(pbody, 0.0f, -jumpForce, true);
 		anims.SetCurrent("jump");
 		isJumping = true;
 		hasDoubleJump = false;
 		spaceWasReleased = false;
-		LOG("First Jump! Force: %.2f", jumpForce);
 	}
 
 	if (isJumping && !spaceWasReleased && !hasDoubleJump &&
 		Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_IDLE) {
 		spaceWasReleased = true;
-		hasDoubleJump = true; // Now double jump is available (ONLY ONCE)
-		LOG("Space released - Double jump now available!");
+		hasDoubleJump = true;
 	}
 }
 
-// Double Jump
 void Player::DoubleJump() {
-
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN &&
 		isJumping && spaceWasReleased && hasDoubleJump) {
 
-		// Get current velocity
 		b2Vec2 currentVel = Engine::GetInstance().physics->GetLinearVelocity(pbody);
-		LOG("Double Jump triggered! Current velocity before: (%.2f, %.2f)", currentVel.x, currentVel.y);
-
-		// Apply double jump with similar force to first jump
 		float doubleJumpVelocity = -jumpForce * 1.8f;
 		Engine::GetInstance().physics->SetLinearVelocity(pbody, currentVel.x, doubleJumpVelocity);
-
-		// Apply a smaller impulse for smoother effect
 		Engine::GetInstance().physics->ApplyLinearImpulseToCenter(pbody, 0.0f, -jumpForce * 0.3f, true);
 
-		// Check velocity after
-		b2Vec2 newVel = Engine::GetInstance().physics->GetLinearVelocity(pbody);
-		LOG("Double Jump applied! New velocity: (%.2f, %.2f)", newVel.x, newVel.y);
-
-		// Reset animation for visual feedback
 		anims.SetCurrent("jump");
-
-		// CONSUME double jump permanently until ground touch
 		hasDoubleJump = false;
-
-		LOG("Double jump CONSUMED - hasDoubleJump is now FALSE!");
-		LOG("No more jumps possible until touching ground!");
-	}
-
-	// Debug: log if trying to double jump when not available
-	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN &&
-		isJumping && !hasDoubleJump) {
-		LOG("Cannot double jump - already used! hasDoubleJump=%d", hasDoubleJump);
 	}
 }
 
-// Dash
 void Player::Dash() {
-	// Check if can dash (cooldown finished and not already dashing)
 	if (dashCooldownTimer <= 0.0f && !isDashing) {
 
-		// Determine dash direction from input
 		int desiredDashDir = 0;
 		if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_DOWN ||
 			Engine::GetInstance().input->GetKey(SDL_SCANCODE_RSHIFT) == KEY_DOWN) {
 
-			// Dash in the direction the player is moving
 			if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_A) == KEY_REPEAT) {
 				desiredDashDir = -1;
 			}
@@ -290,67 +296,47 @@ void Player::Dash() {
 				desiredDashDir = 1;
 			}
 			else {
-				// If no direction pressed, use last movement direction
-				// Default to right if never moved
 				desiredDashDir = 1;
 			}
 		}
 
-		// Start dash if direction is valid
 		if (desiredDashDir != 0) {
 			isDashing = true;
 			dashTimer = static_cast<float>(dashDuration);
 			dashCooldownTimer = static_cast<float>(dashCooldown);
 			dashDirection = desiredDashDir;
 
-			// Set high dash velocity
 			velocity.x = dashForce * static_cast<float>(dashDirection);
 
-			// Also apply an impulse for immediate effect
 			Engine::GetInstance().physics->ApplyLinearImpulseToCenter(
 				pbody,
 				dashForce * 0.5f * static_cast<float>(dashDirection),
 				0.0f,
 				true
 			);
-
-			LOG("Dash! Direction: %d, Velocity: %.2f", dashDirection, velocity.x);
 		}
 	}
 }
 
 void Player::ApplyPhysics() {
-	// In God Mode, disable collisions and gravity
 	if (godMode) {
-		// Disable gravity
 		b2Body_SetGravityScale(pbody->body, 0.0f);
-
-		// Change body type to kinematic (no collision response)
 		b2Body_SetType(pbody->body, b2_kinematicBody);
-
-		// Apply velocity directly
 		Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
 	}
 	else {
-		// Re-enable gravity
 		b2Body_SetGravityScale(pbody->body, 1.0f);
-
-		// Restore to dynamic body
 		b2Body_SetType(pbody->body, b2_dynamicBody);
 
-		// During dash, apply the full dash velocity
 		if (isDashing) {
-			// Maintain dash velocity, allow gravity
 			velocity.y = Engine::GetInstance().physics->GetYVelocity(pbody);
 			Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
 		}
-		// Preserve vertical speed while jumping
 		else if (isJumping) {
 			velocity.y = Engine::GetInstance().physics->GetYVelocity(pbody);
 			Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
 		}
 		else {
-			// Normal movement
 			Engine::GetInstance().physics->SetLinearVelocity(pbody, velocity);
 		}
 	}
@@ -361,53 +347,48 @@ void Player::Draw(float dt) {
 	anims.Update(dt);
 	const SDL_Rect& animFrame = anims.GetCurrentFrame();
 
-	// Update render position using your PhysBody helper
 	int x, y;
 	pbody->GetPosition(x, y);
 	position.setX(static_cast<float>(x));
 	position.setY(static_cast<float>(y));
 
-	// Update camera
 	UpdateCamera();
 
-	// L10: TODO 5: Draw the player using the texture and the current animation frame
+	// NUEVO: Si está muerto, dibuja con transparencia o parpadeo
+	if (isDead) {
+		// Opcional: Hacer parpadear al jugador mientras está muerto
+		// Por ahora solo lo dibujamos normalmente
+	}
+
 	Engine::GetInstance().render->DrawTexture(texture, x - texW / 2, y - texH / 2, &animFrame);
 }
 
 void Player::UpdateCamera() {
-	//L10: TODO 7: Center the camera on the player
 	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
 	int cameraW = Engine::GetInstance().render->camera.w;
 	int cameraH = Engine::GetInstance().render->camera.h;
 
-	// Calcular posición deseada de la cámara (centrada en el jugador)
 	int desiredCameraX = static_cast<int>(-position.getX() + static_cast<float>(cameraW) / 4.0f);
 	int desiredCameraY = static_cast<int>(-position.getY() + static_cast<float>(cameraH) / 2.0f);
 
-	// Limitar la cámara para que no se salga del mapa
-	// Límite izquierdo (cámara no puede ir más a la derecha que 0)
 	if (desiredCameraX > 0) {
 		desiredCameraX = 0;
 	}
 
-	// Límite derecho (cámara no puede mostrar más allá del borde derecho del mapa)
 	int maxCameraX = -(static_cast<int>(mapSize.getX()) - cameraW);
 	if (desiredCameraX < maxCameraX) {
 		desiredCameraX = maxCameraX;
 	}
 
-	// Límite superior
 	if (desiredCameraY > 0) {
 		desiredCameraY = 0;
 	}
 
-	// Límite inferior
 	int maxCameraY = -(static_cast<int>(mapSize.getY()) - cameraH);
 	if (desiredCameraY < maxCameraY) {
 		desiredCameraY = maxCameraY;
 	}
 
-	// Aplicar la posición de la cámara
 	Engine::GetInstance().render->camera.x = desiredCameraX;
 	Engine::GetInstance().render->camera.y = desiredCameraY;
 }
@@ -419,38 +400,37 @@ bool Player::CleanUp()
 	return true;
 }
 
-// L08 TODO 6: Define OnCollision function for the player. 
 void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
-	// Ignore damage in God Mode
-	if (godMode && physB->ctype != ColliderType::ITEM) {
-		return; // Don't process collisions except items
+	// Ignore collisions when dead or in god mode (except items)
+	if (isDead || (godMode && physB->ctype != ColliderType::ITEM)) {
+		return;
 	}
 
 	switch (physB->ctype)
 	{
 	case ColliderType::PLATFORM:
-		LOG("=== PLATFORM COLLISION ===");
-		LOG("  Before reset: isJumping=%d, hasDoubleJump=%d, spaceWasReleased=%d",
-			isJumping, hasDoubleJump, spaceWasReleased);
-
-		// Reset ALL jump flags when touching the ground
 		isJumping = false;
 		hasDoubleJump = false;
 		spaceWasReleased = false;
 		anims.SetCurrent("idle");
-
-		LOG("  After reset: isJumping=%d, hasDoubleJump=%d, spaceWasReleased=%d",
-			isJumping, hasDoubleJump, spaceWasReleased);
-		LOG("=== GROUNDED - Ready for new jump cycle ===");
 		break;
+
 	case ColliderType::ITEM:
 		LOG("Collision ITEM");
 		Engine::GetInstance().audio->PlayFx(pickCoinFxId);
 		physB->listener->Destroy();
 		break;
+
+		// NUEVO: Muerte por daño (spikes/traps)
+	case ColliderType::ENEMY:
+		LOG("Player died: Hit damage object (spike/trap)!");
+		Die();
+		break;
+
 	case ColliderType::UNKNOWN:
 		LOG("Collision UNKNOWN");
 		break;
+
 	default:
 		break;
 	}
@@ -458,18 +438,5 @@ void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
 
 void Player::OnCollisionEnd(PhysBody* physA, PhysBody* physB)
 {
-	switch (physB->ctype)
-	{
-	case ColliderType::PLATFORM:
-		LOG("End Collision PLATFORM");
-		break;
-	case ColliderType::ITEM:
-		LOG("End Collision ITEM");
-		break;
-	case ColliderType::UNKNOWN:
-		LOG("End Collision UNKNOWN");
-		break;
-	default:
-		break;
-	}
+	// Handle collision end if needed
 }
