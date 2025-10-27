@@ -41,6 +41,7 @@ private:
 	void Teleport();
 	void ApplyPhysics();
 	void Draw(float dt);
+	void UpdateCamera();  // Función separada para actualizar la cámara
 
 public:
 

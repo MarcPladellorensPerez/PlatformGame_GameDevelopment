@@ -131,7 +131,32 @@ bool Player::Update(float dt)
 void Player::Teleport() {
 	// Teleport the player to a specific position for testing purposes
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_T) == KEY_DOWN) {
+		// Resetear velocidad ANTES de mover
+		Engine::GetInstance().physics->SetLinearVelocity(pbody, 0.0f, 0.0f);
+
+		// Mover el jugador
 		pbody->SetPosition(96, 96);
+
+		// Forzar actualización inmediata de position
+		position.setX(96.0f);
+		position.setY(96.0f);
+
+		// Resetear estados de salto
+		isJumping = false;
+		hasDoubleJump = false;
+		spaceWasReleased = false;
+		isDashing = false;
+
+		// Ver qué está pasando
+		LOG("=== TELEPORT DEBUG ===");
+		LOG("Player position set to: (%.2f, %.2f)", position.getX(), position.getY());
+		LOG("Camera BEFORE: x=%d, y=%d", Engine::GetInstance().render->camera.x, Engine::GetInstance().render->camera.y);
+
+		// Forzar actualización inmediata de la cámara
+		UpdateCamera();
+
+		LOG("Camera AFTER: x=%d, y=%d", Engine::GetInstance().render->camera.x, Engine::GetInstance().render->camera.y);
+		LOG("======================");
 	}
 }
 
@@ -201,8 +226,6 @@ void Player::Jump() {
 		LOG("First Jump! Force: %.2f", jumpForce);
 	}
 
-	// Enable double jump ONLY ONCE when space is released after first jump
-	// The key check: !hasDoubleJump ensures this only happens once
 	if (isJumping && !spaceWasReleased && !hasDoubleJump &&
 		Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_IDLE) {
 		spaceWasReleased = true;
@@ -213,11 +236,7 @@ void Player::Jump() {
 
 // Double Jump
 void Player::DoubleJump() {
-	// Double jump - ONLY if:
-	// 1. In the air (isJumping)
-	// 2. Space was released (spaceWasReleased) 
-	// 3. Double jump is STILL available (hasDoubleJump)
-	// 4. Space is pressed again
+
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN &&
 		isJumping && spaceWasReleased && hasDoubleJump) {
 
@@ -225,8 +244,8 @@ void Player::DoubleJump() {
 		b2Vec2 currentVel = Engine::GetInstance().physics->GetLinearVelocity(pbody);
 		LOG("Double Jump triggered! Current velocity before: (%.2f, %.2f)", currentVel.x, currentVel.y);
 
-		// Apply double jump with similar force to first jump (not stronger)
-		float doubleJumpVelocity = -jumpForce * 1.8f; // Slightly weaker than velocity method
+		// Apply double jump with similar force to first jump
+		float doubleJumpVelocity = -jumpForce * 1.8f;
 		Engine::GetInstance().physics->SetLinearVelocity(pbody, currentVel.x, doubleJumpVelocity);
 
 		// Apply a smaller impulse for smoother effect
@@ -239,7 +258,7 @@ void Player::DoubleJump() {
 		// Reset animation for visual feedback
 		anims.SetCurrent("jump");
 
-		// CRITICAL: CONSUME double jump permanently until ground touch
+		// CONSUME double jump permanently until ground touch
 		hasDoubleJump = false;
 
 		LOG("Double jump CONSUMED - hasDoubleJump is now FALSE!");
@@ -348,16 +367,49 @@ void Player::Draw(float dt) {
 	position.setX(static_cast<float>(x));
 	position.setY(static_cast<float>(y));
 
-	//L10: TODO 7: Center the camera on the player
-	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
-	float limitLeft = static_cast<float>(Engine::GetInstance().render->camera.w) / 4.0f;
-	float limitRight = mapSize.getX() - static_cast<float>(Engine::GetInstance().render->camera.w) * 3.0f / 4.0f;
-	if (position.getX() - limitLeft > 0.0f && position.getX() < limitRight) {
-		Engine::GetInstance().render->camera.x = static_cast<int>(-position.getX() + static_cast<float>(Engine::GetInstance().render->camera.w) / 4.0f);
-	}
+	// Update camera
+	UpdateCamera();
 
 	// L10: TODO 5: Draw the player using the texture and the current animation frame
 	Engine::GetInstance().render->DrawTexture(texture, x - texW / 2, y - texH / 2, &animFrame);
+}
+
+void Player::UpdateCamera() {
+	//L10: TODO 7: Center the camera on the player
+	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
+	int cameraW = Engine::GetInstance().render->camera.w;
+	int cameraH = Engine::GetInstance().render->camera.h;
+
+	// Calcular posición deseada de la cámara (centrada en el jugador)
+	int desiredCameraX = static_cast<int>(-position.getX() + static_cast<float>(cameraW) / 4.0f);
+	int desiredCameraY = static_cast<int>(-position.getY() + static_cast<float>(cameraH) / 2.0f);
+
+	// Limitar la cámara para que no se salga del mapa
+	// Límite izquierdo (cámara no puede ir más a la derecha que 0)
+	if (desiredCameraX > 0) {
+		desiredCameraX = 0;
+	}
+
+	// Límite derecho (cámara no puede mostrar más allá del borde derecho del mapa)
+	int maxCameraX = -(static_cast<int>(mapSize.getX()) - cameraW);
+	if (desiredCameraX < maxCameraX) {
+		desiredCameraX = maxCameraX;
+	}
+
+	// Límite superior
+	if (desiredCameraY > 0) {
+		desiredCameraY = 0;
+	}
+
+	// Límite inferior
+	int maxCameraY = -(static_cast<int>(mapSize.getY()) - cameraH);
+	if (desiredCameraY < maxCameraY) {
+		desiredCameraY = maxCameraY;
+	}
+
+	// Aplicar la posición de la cámara
+	Engine::GetInstance().render->camera.x = desiredCameraX;
+	Engine::GetInstance().render->camera.y = desiredCameraY;
 }
 
 bool Player::CleanUp()
