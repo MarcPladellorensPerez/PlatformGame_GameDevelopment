@@ -110,7 +110,6 @@ bool Engine::Start() {
 
     LOG("Engine::Start");
 
-    // NUEVO: Cargar la textura del help menu
     helpMenuTexture = textures->Load("Assets/Textures/help_menu.png");
     if (helpMenuTexture == nullptr) {
         LOG("WARNING: Could not load help menu texture. Using fallback rectangle.");
@@ -212,7 +211,6 @@ bool Engine::CleanUp() {
 
     LOG("Engine::CleanUp");
 
-    // NUEVO: Liberar la textura del help menu
     if (helpMenuTexture != nullptr) {
         textures->UnLoad(helpMenuTexture);
         helpMenuTexture = nullptr;

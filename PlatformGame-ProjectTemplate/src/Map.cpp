@@ -1,5 +1,4 @@
-﻿
-#include "Engine.h"
+﻿#include "Engine.h"
 #include "Render.h"
 #include "Textures.h"
 #include "Map.h"
@@ -15,7 +14,8 @@ Map::Map() : Module(), mapLoaded(false)
 
 // Destructor
 Map::~Map()
-{}
+{
+}
 
 // Called before render is available
 bool Map::Awake()
@@ -37,14 +37,30 @@ bool Map::Update(float dt)
 
     if (mapLoaded) {
 
+        for (const auto& imageLayer : mapData.imageLayers) {
+            if (imageLayer->texture) {
+                if (imageLayer->repeatX) {
+                    Vector2D mapSize = GetMapSizeInPixels();
+                    int numRepeats = (int)ceil(mapSize.getX() / imageLayer->width) + 1;
+
+                    for (int i = 0; i < numRepeats; i++) {
+                        Engine::GetInstance().render->DrawTexture(imageLayer->texture, i * imageLayer->width, 0, nullptr);
+                    }
+                }
+                else {
+                    Engine::GetInstance().render->DrawTexture(imageLayer->texture, 0, 0, nullptr);
+                }
+            }
+        }
+
         // L07 TODO 5: Prepare the loop to draw all tiles in a layer + DrawTexture()
         // iterate all tiles in a layer
         for (const auto& mapLayer : mapData.layers) {
             //L09 TODO 7: Check if the property Draw exist get the value, if it's true draw the lawyer
             if (mapLayer->properties.GetProperty("Draw") != NULL && mapLayer->properties.GetProperty("Draw")->value == true) {
-				for (int i = 0; i < mapData.height; i++) {
-					for (int j = 0; j < mapData.width; j++) {
-						// L07 TODO 9: Complete the draw function
+                for (int i = 0; i < mapData.height; i++) {
+                    for (int j = 0; j < mapData.width; j++) {
+                        // L07 TODO 9: Complete the draw function
                         //Get the gid from tile
                         int gid = mapLayer->Get(i, j);
 
@@ -73,13 +89,13 @@ bool Map::Update(float dt)
 // L09: TODO 2: Implement function to the Tileset based on a tile id
 TileSet* Map::GetTilesetFromTileId(int gid) const
 {
-	TileSet* set = nullptr;
-    for(const auto& tileset : mapData.tilesets) {
+    TileSet* set = nullptr;
+    for (const auto& tileset : mapData.tilesets) {
         set = tileset;
         if (gid >= tileset->firstGid && gid < tileset->firstGid + tileset->tileCount) {
-			break;
+            break;
         }
-	}
+    }
     return set;
 }
 
@@ -101,6 +117,13 @@ bool Map::CleanUp()
     }
     mapData.layers.clear();
 
+    // Limpiar imageLayers
+    for (const auto& imageLayer : mapData.imageLayers)
+    {
+        delete imageLayer;
+    }
+    mapData.imageLayers.clear();
+
     return true;
 }
 
@@ -117,10 +140,10 @@ bool Map::Load(std::string path, std::string fileName)
     pugi::xml_document mapFileXML;
     pugi::xml_parse_result result = mapFileXML.load_file(mapPathName.c_str());
 
-    if(result == NULL)
-	{
-		LOG("Could not load map xml file %s. pugi error: %s", mapPathName.c_str(), result.description());
-		ret = false;
+    if (result == NULL)
+    {
+        LOG("Could not load map xml file %s. pugi error: %s", mapPathName.c_str(), result.description());
+        ret = false;
     }
     else {
 
@@ -132,12 +155,12 @@ bool Map::Load(std::string path, std::string fileName)
         mapData.tileHeight = mapFileXML.child("map").attribute("tileheight").as_int();
 
         // L06: TODO 4: Implement the LoadTileSet function to load the tileset properties
-       
+
         //Iterate the Tileset
-        for(pugi::xml_node tilesetNode = mapFileXML.child("map").child("tileset"); tilesetNode!=NULL; tilesetNode = tilesetNode.next_sibling("tileset"))
-		{
+        for (pugi::xml_node tilesetNode = mapFileXML.child("map").child("tileset"); tilesetNode != NULL; tilesetNode = tilesetNode.next_sibling("tileset"))
+        {
             //Load Tileset attributes
-			TileSet* tileSet = new TileSet();
+            TileSet* tileSet = new TileSet();
             tileSet->firstGid = tilesetNode.attribute("firstgid").as_int();
             tileSet->name = tilesetNode.attribute("name").as_string();
             tileSet->tileWidth = tilesetNode.attribute("tilewidth").as_int();
@@ -147,12 +170,12 @@ bool Map::Load(std::string path, std::string fileName)
             tileSet->tileCount = tilesetNode.attribute("tilecount").as_int();
             tileSet->columns = tilesetNode.attribute("columns").as_int();
 
-			//Load the tileset image
-			std::string imgName = tilesetNode.child("image").attribute("source").as_string();
-            tileSet->texture = Engine::GetInstance().textures->Load((mapPath+imgName).c_str());
+            //Load the tileset image
+            std::string imgName = tilesetNode.child("image").attribute("source").as_string();
+            tileSet->texture = Engine::GetInstance().textures->Load((mapPath + imgName).c_str());
 
-			mapData.tilesets.push_back(tileSet);
-		}
+            mapData.tilesets.push_back(tileSet);
+        }
 
         // L07: TODO 3: Iterate all layers in the TMX and load each of them
         for (pugi::xml_node layerNode = mapFileXML.child("map").child("layer"); layerNode != NULL; layerNode = layerNode.next_sibling("layer")) {
@@ -175,6 +198,37 @@ bool Map::Load(std::string path, std::string fileName)
 
             //add the layer to the map
             mapData.layers.push_back(mapLayer);
+        }
+
+        // CARGAR IMAGE LAYERS (backgrounds)
+        for (pugi::xml_node imageLayerNode = mapFileXML.child("map").child("imagelayer");
+            imageLayerNode != NULL;
+            imageLayerNode = imageLayerNode.next_sibling("imagelayer"))
+        {
+            ImageLayer* imageLayer = new ImageLayer();
+            imageLayer->id = imageLayerNode.attribute("id").as_int();
+            imageLayer->name = imageLayerNode.attribute("name").as_string();
+            imageLayer->repeatX = imageLayerNode.attribute("repeatx").as_int() == 1;
+
+            // Load the image
+            pugi::xml_node imageNode = imageLayerNode.child("image");
+            if (imageNode) {
+                imageLayer->imagePath = imageNode.attribute("source").as_string();
+                imageLayer->width = imageNode.attribute("width").as_int();
+                imageLayer->height = imageNode.attribute("height").as_int();
+
+                // Load texture
+                imageLayer->texture = Engine::GetInstance().textures->Load((mapPath + imageLayer->imagePath).c_str());
+
+                if (imageLayer->texture) {
+                    LOG("Loaded background image: %s", imageLayer->imagePath.c_str());
+                }
+                else {
+                    LOG("ERROR: Could not load background image: %s", (mapPath + imageLayer->imagePath).c_str());
+                }
+            }
+
+            mapData.imageLayers.push_back(imageLayer);
         }
 
         // L08 TODO 3: Create colliders
@@ -201,8 +255,6 @@ bool Map::Load(std::string path, std::string fileName)
                             c1->ctype = ColliderType::PLATFORM;
                         }
 
-                        // NUEVO: gid == 50 → DAMAGE (spikes/traps)
-                        // Necesitas añadir este tile en tu tileset MapMetadata
                         else if (gid == 50) {
                             Vector2D mapCoord = MapToWorld(i, j);
                             PhysBody* c2 = Engine::GetInstance().physics.get()->CreateRectangle(
@@ -236,13 +288,18 @@ bool Map::Load(std::string path, std::string fileName)
                 LOG("tile width : %d tile height : %d", tileset->tileWidth, tileset->tileHeight);
                 LOG("spacing : %d margin : %d", tileset->spacing, tileset->margin);
             }
-            			
+
             LOG("Layers----");
 
             for (const auto& layer : mapData.layers) {
                 LOG("id : %d name : %s", layer->id, layer->name.c_str());
-				LOG("Layer width : %d Layer height : %d", layer->width, layer->height);
-            }   
+                LOG("Layer width : %d Layer height : %d", layer->width, layer->height);
+            }
+
+            LOG("Image Layers----");
+            for (const auto& imageLayer : mapData.imageLayers) {
+                LOG("id : %d name : %s image : %s", imageLayer->id, imageLayer->name.c_str(), imageLayer->imagePath.c_str());
+            }
         }
         else {
             LOG("Error while parsing map file: %s", mapPathName.c_str());
@@ -292,7 +349,3 @@ Vector2D Map::GetMapSizeInPixels()
     sizeInPixels.setY((float)(mapData.height * mapData.tileHeight));
     return sizeInPixels;
 }
-
-
-
-

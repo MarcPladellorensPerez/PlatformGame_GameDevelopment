@@ -29,7 +29,6 @@ bool Player::LoadParameters(pugi::xml_node parameters) {
 	position.setX(parameters.child("position").attribute("x").as_float());
 	position.setY(parameters.child("position").attribute("y").as_float());
 
-	// NUEVO: Guardar spawn position para respawn
 	spawnPosition = position;
 
 	// Load movement parameters
@@ -86,7 +85,6 @@ bool Player::Start() {
 
 bool Player::Update(float dt)
 {
-	// NUEVO: Si está muerto, solo actualizar respawn timer
 	if (isDead) {
 		respawnTimer -= dt;
 		if (respawnTimer <= 0.0f) {
@@ -120,7 +118,6 @@ bool Player::Update(float dt)
 		DoubleJump();
 		Dash();
 
-		// NUEVO: Check death conditions
 		CheckDeath();
 	}
 
@@ -139,7 +136,6 @@ void Player::Teleport() {
 	}
 }
 
-// NUEVO: Check if player should die
 void Player::CheckDeath() {
 	// Get map size
 	Vector2D mapSize = Engine::GetInstance().map->GetMapSizeInPixels();
@@ -157,7 +153,6 @@ void Player::CheckDeath() {
 	// }
 }
 
-// NUEVO: Handle death
 void Player::Die() {
 	if (isDead || godMode) return; // Can't die in god mode
 
@@ -177,7 +172,6 @@ void Player::Die() {
 	LOG("Respawning in %.2f ms...", respawnDelay);
 }
 
-// NUEVO: Handle respawn
 void Player::Respawn() {
 	LOG("=== PLAYER RESPAWNED ===");
 
@@ -354,10 +348,8 @@ void Player::Draw(float dt) {
 
 	UpdateCamera();
 
-	// NUEVO: Si está muerto, dibuja con transparencia o parpadeo
 	if (isDead) {
-		// Opcional: Hacer parpadear al jugador mientras está muerto
-		// Por ahora solo lo dibujamos normalmente
+		
 	}
 
 	Engine::GetInstance().render->DrawTexture(texture, x - texW / 2, y - texH / 2, &animFrame);
@@ -421,7 +413,6 @@ void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
 		physB->listener->Destroy();
 		break;
 
-		// NUEVO: Muerte por daño (spikes/traps)
 	case ColliderType::ENEMY:
 		LOG("Player died: Hit damage object (spike/trap)!");
 		Die();

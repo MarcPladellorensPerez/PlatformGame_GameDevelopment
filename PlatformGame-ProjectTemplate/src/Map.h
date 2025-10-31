@@ -86,6 +86,19 @@ struct TileSet
 
 };
 
+struct ImageLayer
+{
+    int id;
+    std::string name;
+    std::string imagePath;
+    SDL_Texture* texture;
+    int width;
+    int height;
+    bool repeatX;
+
+    ImageLayer() : id(0), texture(nullptr), width(0), height(0), repeatX(false) {}
+};
+
 // L06: TODO 1: Create a struct needed to hold the information to Map node
 struct MapData
 {
@@ -97,6 +110,7 @@ struct MapData
 
     // L07: TODO 2: Add the info to the MapLayer Struct
     std::list<MapLayer*> layers;
+    std::list<ImageLayer*> imageLayers;
 };
 
 class Map : public Module

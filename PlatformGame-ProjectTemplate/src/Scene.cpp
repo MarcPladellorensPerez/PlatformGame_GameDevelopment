@@ -30,7 +30,6 @@ bool Scene::Awake()
 	//L04: TODO 3b: Instantiate the player using the entity manager
 	player = std::dynamic_pointer_cast<Player>(Engine::GetInstance().entityManager->CreateEntity(EntityType::PLAYER));
 
-	// NEW: Load player parameters from external XML file
 	pugi::xml_node playerConfigNode = configParameters.child("player");
 	if (playerConfigNode) {
 		std::string playerConfigPath = playerConfigNode.attribute("config_path").as_string();
@@ -66,18 +65,14 @@ bool Scene::Start()
 	return true;
 }
 
-// Called each loop iteration
 bool Scene::PreUpdate()
 {
 	return true;
 }
 
-// Called each loop iteration
-// Called each loop iteration
 bool Scene::Update(float dt)
 {
-	// Camera movement independent of framerate
-	float camSpeed = 100.0f; // pixels per second
+	float camSpeed = 100.0f;
 
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_UP) == KEY_REPEAT)
 		Engine::GetInstance().render->camera.y -= (int)ceil(camSpeed * dt / 1000.0f);
@@ -91,10 +86,10 @@ bool Scene::Update(float dt)
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_RIGHT) == KEY_REPEAT)
 		Engine::GetInstance().render->camera.x += (int)ceil(camSpeed * dt / 1000.0f);
 
+
 	return true;
 }
 
-// Called each loop iteration
 bool Scene::PostUpdate()
 {
 	bool ret = true;
@@ -105,7 +100,6 @@ bool Scene::PostUpdate()
 	return ret;
 }
 
-// Called before quitting
 bool Scene::CleanUp()
 {
 	LOG("Freeing scene");

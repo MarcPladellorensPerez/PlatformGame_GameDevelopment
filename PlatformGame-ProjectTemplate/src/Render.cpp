@@ -42,6 +42,8 @@ bool Render::Awake()
 	}
 	else
 	{
+
+
 		if (configParameters.child("vsync").attribute("value").as_bool())
 		{
 			if (!SDL_SetRenderVSync(renderer, 1))
