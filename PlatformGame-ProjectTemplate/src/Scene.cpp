@@ -11,6 +11,7 @@
 #include "Player.h"
 #include "Map.h"
 #include "Item.h"
+#include "Physics.h"
 
 Scene::Scene() : Module()
 {
@@ -62,6 +63,19 @@ bool Scene::Start()
 	//L06 TODO 3: Call the function to load the map. 
 	Engine::GetInstance().map->Load("Assets/Maps/", "MapTemplate.tmx");
 	
+	Vector2D spawnPos = Engine::GetInstance().map->GetPlayerSpawnPosition();
+
+	if (player) {
+		player->position = spawnPos;
+		player->spawnPosition = spawnPos;
+
+		if (player->pbody) {
+			player->pbody->SetPosition((int)spawnPos.getX(), (int)spawnPos.getY());
+		}
+
+		LOG("Player position set to spawn: (%.2f, %.2f)", spawnPos.getX(), spawnPos.getY());
+	}
+
 	return true;
 }
 

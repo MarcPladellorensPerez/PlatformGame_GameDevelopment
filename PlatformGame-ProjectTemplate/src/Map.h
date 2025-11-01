@@ -106,6 +106,10 @@ struct MapData
 	int height;
 	int tileWidth;
 	int tileHeight;
+
+    float playerSpawnX = 0.0f;
+    float playerSpawnY = 0.0f;
+
     std::list<TileSet*> tilesets;
 
     // L07: TODO 2: Add the info to the MapLayer Struct
@@ -152,6 +156,9 @@ public:
 public: 
     std::string mapFileName;
     std::string mapPath;
+    Vector2D player;
+    Vector2D GetPlayerSpawnPosition();
+
 
 private:
     bool mapLoaded;

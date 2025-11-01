@@ -117,7 +117,6 @@ bool Map::CleanUp()
     }
     mapData.layers.clear();
 
-    // Limpiar imageLayers
     for (const auto& imageLayer : mapData.imageLayers)
     {
         delete imageLayer;
@@ -231,6 +230,26 @@ bool Map::Load(std::string path, std::string fileName)
             mapData.imageLayers.push_back(imageLayer);
         }
 
+        for (pugi::xml_node objectGroupNode = mapFileXML.child("map").child("objectgroup");
+            objectGroupNode != NULL;
+            objectGroupNode = objectGroupNode.next_sibling("objectgroup"))
+        {
+            std::string groupName = objectGroupNode.attribute("name").as_string();
+            LOG("Loading object group: %s", groupName.c_str());
+
+            for (pugi::xml_node objectNode = objectGroupNode.child("object");
+                objectNode != NULL;
+                objectNode = objectNode.next_sibling("object"))
+            {
+                std::string objectName = objectNode.attribute("name").as_string();
+
+                if (objectName == "PlayerSpawn") {
+                    mapData.playerSpawnX = objectNode.attribute("x").as_float();
+                    mapData.playerSpawnY = objectNode.attribute("y").as_float();
+                    LOG("Player spawn found at: (%.2f, %.2f)", mapData.playerSpawnX, mapData.playerSpawnY);
+                }
+            }
+        }
         // L08 TODO 3: Create colliders
         // L08 TODO 7: Assign collider type
         // Later you can create a function here to load and create the colliders from the map
@@ -255,8 +274,17 @@ bool Map::Load(std::string path, std::string fileName)
                             c1->ctype = ColliderType::PLATFORM;
                         }
 
-                        else if (gid == 50) {
-                            Vector2D mapCoord = MapToWorld(i, j);
+                       
+                    }
+                }
+            }
+            if (mapLayer->name == "Damage") {
+                for (int y = 0; y < mapData.height; y++) {
+                    for (int x = 0; x < mapData.width; x++) {
+                        int gid = mapLayer->Get(y,x);
+
+                        if (gid == 50) {  // Verde = daño
+                            Vector2D mapCoord = MapToWorld(y, x);
                             PhysBody* c2 = Engine::GetInstance().physics.get()->CreateRectangle(
                                 mapCoord.getX() + mapData.tileWidth / 2,
                                 mapCoord.getY() + mapData.tileHeight / 2,
@@ -264,12 +292,13 @@ bool Map::Load(std::string path, std::string fileName)
                                 mapData.tileHeight,
                                 STATIC
                             );
-                            c2->ctype = ColliderType::ENEMY; // Usamos ENEMY para damage
+                            c2->ctype = ColliderType::ENEMY; 
                             LOG("Created DAMAGE collider at (%d, %d)", (int)mapCoord.getX(), (int)mapCoord.getY());
                         }
                     }
                 }
             }
+
         }
 
         ret = true;
@@ -348,4 +377,12 @@ Vector2D Map::GetMapSizeInPixels()
     sizeInPixels.setX((float)(mapData.width * mapData.tileWidth));
     sizeInPixels.setY((float)(mapData.height * mapData.tileHeight));
     return sizeInPixels;
+}
+
+Vector2D Map::GetPlayerSpawnPosition()
+{
+    Vector2D spawn;
+    spawn.setX(mapData.playerSpawnX);
+    spawn.setY(mapData.playerSpawnY);
+    return spawn;
 }
