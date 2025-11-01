@@ -35,8 +35,14 @@ public:
 	// Get player pointer
 	std::shared_ptr<Player> GetPlayer() { return player; }
 
+	void LoadLevel(int levelNumber);
+
+	void UnloadLevel();
 private:
+
 
 	//L03: TODO 3b: Declare a Player attribute
 	std::shared_ptr<Player> player;
+	int currentLevel = 1;
+
 };

@@ -60,6 +60,7 @@ bool Scene::Start()
 
 	Engine::GetInstance().audio->PlayMusic("Assets/Audio/Music/level-iv-339695.wav");
 
+	LoadLevel(1);
 	//L06 TODO 3: Call the function to load the map. 
 	Engine::GetInstance().map->Load("Assets/Maps/", "MapTemplate.tmx");
 	
@@ -119,4 +120,30 @@ bool Scene::CleanUp()
 	LOG("Freeing scene");
 
 	return true;
+}
+
+void Scene::LoadLevel(int levelNumber) {
+	// Descargar nivel anterior
+	UnloadLevel();
+
+	currentLevel = levelNumber;
+
+	std::string levelFile = "Level" + std::to_string(levelNumber) + ".tmx";
+	Engine::GetInstance().map->Load("Assets/Maps/", levelFile);
+
+	Vector2D spawnPos = Engine::GetInstance().map->GetPlayerSpawnPosition();
+	if (player) {
+		player->position = spawnPos;
+		player->spawnPosition = spawnPos;
+		if (player->pbody) {
+			player->pbody->SetPosition((int)spawnPos.getX(), (int)spawnPos.getY());
+		}
+	}
+
+	LOG("Level %d loaded", levelNumber);
+}
+
+void Scene::UnloadLevel() {
+	Engine::GetInstance().map->CleanUp();
+	LOG("Level unloaded");
 }
