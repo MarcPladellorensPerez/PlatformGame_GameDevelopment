@@ -12,7 +12,10 @@
  <tileset firstgid="1303" name="Coins" tilewidth="32" tileheight="32" tilecount="1" columns="1">
   <image source="../Textures/goldCoin.png" width="32" height="32"/>
  </tileset>
- <imagelayer id="15" name="background" offsetx="-2.33333" offsety="-1.66667" repeatx="1">
+ <tileset firstgid="1304" name="MapData" tilewidth="32" tileheight="32" spacing="1" margin="1" tilecount="1" columns="1">
+  <image source="MapData2.png" width="34" height="34"/>
+ </tileset>
+ <imagelayer id="15" name="background" offsetx="-2.33333" offsety="-1.66667" repeatx="1" repeaty="1">
   <image source="background1.png" width="1376" height="768"/>
  </imagelayer>
  <layer id="1" name="Map" width="96" height="24">
@@ -1806,10 +1809,10 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="64"/>
+   <tile gid="65"/>
+   <tile gid="66"/>
+   <tile gid="85"/>
    <tile/>
    <tile/>
    <tile/>
@@ -1902,10 +1905,10 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="94"/>
+   <tile gid="95"/>
+   <tile gid="96"/>
+   <tile gid="115"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6010,11 +6013,11 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="1"/>
-   <tile gid="1"/>
-   <tile gid="1"/>
-   <tile gid="1"/>
-   <tile gid="1"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6484,10 +6487,6 @@
    <tile gid="1"/>
    <tile gid="1"/>
    <tile gid="1"/>
-   <tile/>
-   <tile/>
-   <tile/>
-   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -6544,6 +6543,10 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
+   <tile gid="1304"/>
    <tile/>
    <tile/>
    <tile/>

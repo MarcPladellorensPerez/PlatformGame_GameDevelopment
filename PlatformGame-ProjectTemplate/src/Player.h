@@ -99,9 +99,16 @@ public:
 private:
 	b2Vec2 velocity = { 0.0f, 0.0f };
 	AnimationSet anims;
+	
 	Checkpoint* currentCheckpoint = nullptr;
 	float checkpointRadius = 32.0f;
 	void CheckCheckpoints();
+	
+	bool isOnOneWayPlatform = false;
+	PhysBody* currentOneWayPlatform = nullptr;
+	int oneWayPlatformY = 0;
+	float lastYVelocity = 0.0f;
+	
 
 	// Configuration paths (loaded from XML)
 	std::string texturePath;

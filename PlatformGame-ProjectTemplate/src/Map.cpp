@@ -283,9 +283,28 @@ bool Map::Load(std::string path, std::string fileName)
                     for (int j = 0; j < mapData.width; j++) {
                         int gid = mapLayer->Get(i, j);
 
-                        // gid == 49 → PLATFORM (collider normal)
-                        if (gid == 1) {
-                            Vector2D mapCoord = MapToWorld(i, j);
+                        if (gid == 0) continue; // Tile vacío
+
+                        Vector2D mapCoord = MapToWorld(i, j);
+
+                        // Obtener el tileset de este GID
+                        TileSet* tileset = GetTilesetFromTileId(gid);
+                        if (tileset == nullptr) continue;
+
+                        // Plataformas ONE-WAY (tileset "MapData" - tu azul)
+                        if (tileset->name == "MapData") {
+                            PhysBody* oneWay = Engine::GetInstance().physics.get()->CreateRectangleSensor(
+                                mapCoord.getX() + mapData.tileWidth / 2,
+                                mapCoord.getY() + mapData.tileHeight / 2,
+                                mapData.tileWidth,
+                                mapData.tileHeight,
+                                STATIC
+                            );
+                            oneWay->ctype = ColliderType::PLATFORM_ONEWAY;
+                            LOG("Created ONE-WAY platform at (%d, %d) - GID: %d", (int)mapCoord.getX(), (int)mapCoord.getY(), gid);
+                        }
+                        // Plataformas NORMALES (tileset "MapMetadata" - GID 1 y 2)
+                        else if (tileset->name == "MapMetadata") {
                             PhysBody* c1 = Engine::GetInstance().physics.get()->CreateRectangle(
                                 mapCoord.getX() + mapData.tileWidth / 2,
                                 mapCoord.getY() + mapData.tileHeight / 2,
@@ -294,16 +313,15 @@ bool Map::Load(std::string path, std::string fileName)
                                 STATIC
                             );
                             c1->ctype = ColliderType::PLATFORM;
+                            LOG("Created NORMAL platform at (%d, %d) - GID: %d", (int)mapCoord.getX(), (int)mapCoord.getY(), gid);
                         }
-
-                       
                     }
                 }
             }
             if (mapLayer->name == "Damage") {
                 for (int y = 0; y < mapData.height; y++) {
                     for (int x = 0; x < mapData.width; x++) {
-                        int gid = mapLayer->Get(y,x);
+                        int gid = mapLayer->Get(y, x);
 
                         if (gid == 2) {  // Verde = daño
                             Vector2D mapCoord = MapToWorld(y, x);
@@ -314,7 +332,7 @@ bool Map::Load(std::string path, std::string fileName)
                                 mapData.tileHeight,
                                 STATIC
                             );
-                            c2->ctype = ColliderType::ENEMY; 
+                            c2->ctype = ColliderType::ENEMY;
                             LOG("Created DAMAGE collider at (%d, %d)", (int)mapCoord.getX(), (int)mapCoord.getY());
                         }
                     }
