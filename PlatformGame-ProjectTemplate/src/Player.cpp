@@ -120,6 +120,7 @@ bool Player::Update(float dt)
 
 		CheckDeath();
 	}
+	CheckCheckpoints();
 
 	Teleport();
 	ApplyPhysics();
@@ -425,6 +426,37 @@ void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
 	default:
 		break;
 	}
+}
+
+void Player::CheckCheckpoints() {
+	Checkpoint* nearbyCheckpoint = Engine::GetInstance().map->GetCheckpointAt(
+		position.getX(),
+		position.getY(),
+		checkpointRadius
+	);
+
+	if (nearbyCheckpoint != nullptr && !nearbyCheckpoint->activated) {
+		ActivateCheckpoint(nearbyCheckpoint);
+	}
+}
+
+void Player::ActivateCheckpoint(Checkpoint* checkpoint) {
+	if (checkpoint == nullptr) return;
+
+	if (currentCheckpoint != nullptr) {
+		currentCheckpoint->activated = false;
+	}
+
+	checkpoint->activated = true;
+	currentCheckpoint = checkpoint;
+
+	spawnPosition.setX(checkpoint->x);
+	spawnPosition.setY(checkpoint->y);
+
+	LOG("=== CHECKPOINT ACTIVADO ===");
+	LOG("Checkpoint: %s", checkpoint->name.c_str());
+	LOG("Nueva posicion de respawn: (%.2f, %.2f)", spawnPosition.getX(), spawnPosition.getY());
+
 }
 
 void Player::OnCollisionEnd(PhysBody* physA, PhysBody* physB)

@@ -123,6 +123,13 @@ bool Map::CleanUp()
     }
     mapData.imageLayers.clear();
 
+
+    for (const auto& checkpoint : mapData.checkpoints)
+    {
+        delete checkpoint;
+    }
+    mapData.checkpoints.clear();
+
     return true;
 }
 
@@ -237,6 +244,9 @@ bool Map::Load(std::string path, std::string fileName)
             std::string groupName = objectGroupNode.attribute("name").as_string();
             LOG("Loading object group: %s", groupName.c_str());
 
+            float objX = 0.0f;
+            float objY = 0.0f;
+
             for (pugi::xml_node objectNode = objectGroupNode.child("object");
                 objectNode != NULL;
                 objectNode = objectNode.next_sibling("object"))
@@ -247,6 +257,18 @@ bool Map::Load(std::string path, std::string fileName)
                     mapData.playerSpawnX = objectNode.attribute("x").as_float();
                     mapData.playerSpawnY = objectNode.attribute("y").as_float();
                     LOG("Player spawn found at: (%.2f, %.2f)", mapData.playerSpawnX, mapData.playerSpawnY);
+                }
+                else if (objectName.find("Checkpoint") != std::string::npos || objectName == "Spawn2" || objectName == "Spawn3") {
+                    Checkpoint* checkpoint = new Checkpoint();
+                    checkpoint->id = objectNode.attribute("id").as_int();
+                    checkpoint->name = objectName;
+
+                    checkpoint->x = objectNode.attribute("x").as_float();
+                    checkpoint->y = objectNode.attribute("y").as_float();
+                    checkpoint->activated = false;
+
+                    mapData.checkpoints.push_back(checkpoint);
+                    LOG("  *** CHECKPOINT CARGADO: '%s' at (%.2f, %.2f) ***", checkpoint->name.c_str(), checkpoint->x, checkpoint->y);
                 }
             }
         }
@@ -385,4 +407,21 @@ Vector2D Map::GetPlayerSpawnPosition()
     spawn.setX(mapData.playerSpawnX);
     spawn.setY(mapData.playerSpawnY);
     return spawn;
+}
+
+std::vector<Checkpoint*> Map::GetCheckpoints() {
+    return mapData.checkpoints;
+}
+
+Checkpoint* Map::GetCheckpointAt(float x, float y, float radius) {
+    for (auto checkpoint : mapData.checkpoints) {
+        float dx = checkpoint->x - x;
+        float dy = checkpoint->y - y;
+        float distance = sqrt(dx * dx + dy * dy);
+
+        if (distance <= radius) {
+            return checkpoint;
+        }
+    }
+    return nullptr;
 }

@@ -99,6 +99,17 @@ struct ImageLayer
     ImageLayer() : id(0), texture(nullptr), width(0), height(0), repeatX(false) {}
 };
 
+struct Checkpoint {
+    int id;
+    std::string name;
+    float x;
+    float y;
+    bool activated;
+
+    Checkpoint() : id(0), x(0.0f), y(0.0f), activated(false) {}
+};
+
+
 // L06: TODO 1: Create a struct needed to hold the information to Map node
 struct MapData
 {
@@ -111,10 +122,13 @@ struct MapData
     float playerSpawnY = 0.0f;
 
     std::list<TileSet*> tilesets;
+    std::vector<Checkpoint*> checkpoints;
 
     // L07: TODO 2: Add the info to the MapLayer Struct
     std::list<MapLayer*> layers;
     std::list<ImageLayer*> imageLayers;
+
+
 };
 
 class Map : public Module
@@ -156,9 +170,12 @@ public:
 public: 
     std::string mapFileName;
     std::string mapPath;
+    
     Vector2D player;
+    
     Vector2D GetPlayerSpawnPosition();
-
+    std::vector<Checkpoint*> GetCheckpoints();
+    Checkpoint* GetCheckpointAt(float x, float y, float radius);
 
 private:
     bool mapLoaded;

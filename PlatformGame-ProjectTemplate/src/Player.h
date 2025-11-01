@@ -6,6 +6,7 @@
 #include <SDL3/SDL.h>
 
 struct SDL_Texture;
+struct Checkpoint;
 
 class Player : public Entity
 {
@@ -85,9 +86,15 @@ public:
 	float respawnDelay = 1000.0f; // 1 second delay
 	Vector2D spawnPosition;       // Initial spawn position
 
+	void ActivateCheckpoint(Checkpoint* checkpoint);
+
 private:
 	b2Vec2 velocity = { 0.0f, 0.0f };
 	AnimationSet anims;
+	Checkpoint* currentCheckpoint = nullptr;
+	float checkpointRadius = 32.0f;
+	void CheckCheckpoints();
+
 
 	// Configuration paths
 	std::string texturePath;
