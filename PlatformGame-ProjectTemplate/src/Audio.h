@@ -13,25 +13,37 @@ class Audio : public Module
 {
 public:
 
-	Audio();
+    Audio();
 
-	// Destructor
-	virtual ~Audio();
+    // Destructor
+    virtual ~Audio();
 
-	// Called before render is available
-	bool Awake();
+    // Called before render is available
+    bool Awake();
 
-	// Called before quitting
-	bool CleanUp();
+    // Called before quitting
+    bool CleanUp();
 
-	// Play a music file
-	bool PlayMusic(const char* path, float fadeTime = DEFAULT_MUSIC_FADE_TIME);
+    // Play a music file
+    bool PlayMusic(const char* path, float fadeTime = DEFAULT_MUSIC_FADE_TIME);
 
-	// Load a WAV in memory
-	int LoadFx(const char* path);
+    // Load a WAV in memory
+    int LoadFx(const char* path);
 
-	// Play a previously loaded WAV
-	bool PlayFx(int fx, int repeat = 0);
+    // Play a previously loaded WAV
+    bool PlayFx(int fx, int repeat = 0);
+
+    // Play a previously loaded WAV with custom volume (0.0 to 1.0)
+    bool PlayFx(int fx, float volume, int repeat = 0);
+
+    // Set volume for music (0.0 to 1.0)
+    void SetMusicVolume(float volume);
+
+    // Set volume for sound effects (0.0 to 1.0)
+    void SetFxVolume(float volume);
+
+    // Stop all sounds on SFX stream
+    void StopAllFx();
 
 private:
 
@@ -52,6 +64,10 @@ private:
     // Loaded sounds
     SoundData music_data_{};
     std::vector<SoundData> sfx_; // 1-based indexing outwardly
+
+    // Volume controls (0.0 to 1.0)
+    float music_volume_{ 1.0f };
+    float fx_volume_{ 1.0f };
 
     // helpers
     bool LoadWavFile(const char* path, SoundData& out);

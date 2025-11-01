@@ -21,6 +21,11 @@
     
     <!-- Audio effects -->
     <audio>
-        <fx name="pickCoin" path="Assets/Audio/Fx/coin-collision-sound-342335.wav"/>
+        <!-- Efectos de sonido del jugador -->
+        <fx name="pickCoin" path="Assets/Audio/Fx/coin_pickup.wav"/>
+        <fx name="jump" path="Assets/Audio/Fx/player_jump.wav"/>
+        <fx name="dash" path="Assets/Audio/Fx/player_dash.wav"/>
+        <fx name="damage" path="Assets/Audio/Fx/player_damage.wav"/>
+        <fx name="death" path="Assets/Audio/Fx/player_death.wav"/>
     </audio>
 </player_config>

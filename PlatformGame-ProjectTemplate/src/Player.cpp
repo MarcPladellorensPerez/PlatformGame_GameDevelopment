@@ -49,7 +49,27 @@ bool Player::LoadParameters(pugi::xml_node parameters) {
 	animTsxPath = parameters.child("animations").attribute("tsx_path").as_string();
 
 	// Load audio paths
-	pickCoinFxPath = parameters.child("audio").child("fx").attribute("path").as_string();
+	pugi::xml_node audioNode = parameters.child("audio");
+	for (pugi::xml_node fxNode = audioNode.child("fx"); fxNode; fxNode = fxNode.next_sibling("fx")) {
+		std::string fxName = fxNode.attribute("name").as_string();
+		std::string fxPath = fxNode.attribute("path").as_string();
+
+		if (fxName == "pickCoin") {
+			pickCoinFxPath = fxPath;
+		}
+		else if (fxName == "jump") {
+			jumpFxPath = fxPath;
+		}
+		else if (fxName == "dash") {
+			dashFxPath = fxPath;
+		}
+		else if (fxName == "damage") {
+			damageFxPath = fxPath;
+		}
+		else if (fxName == "death") {
+			deathFxPath = fxPath;
+		}
+	}
 
 	LOG("Player parameters loaded successfully");
 	LOG("  Position: (%.2f, %.2f)", position.getX(), position.getY());
@@ -77,8 +97,27 @@ bool Player::Start() {
 	// L08 TODO 7: Assign collider type
 	pbody->ctype = ColliderType::PLAYER;
 
-	// Initialize audio effect using the path from config
-	pickCoinFxId = Engine::GetInstance().audio->LoadFx(pickCoinFxPath.c_str());
+	// Initialize audio effects
+	if (!pickCoinFxPath.empty()) {
+		pickCoinFxId = Engine::GetInstance().audio->LoadFx(pickCoinFxPath.c_str());
+		LOG("Loaded audio: coin_pickup");
+	}
+	if (!jumpFxPath.empty()) {
+		jumpFxId = Engine::GetInstance().audio->LoadFx(jumpFxPath.c_str());
+		LOG("Loaded audio: player_jump");
+	}
+	if (!dashFxPath.empty()) {
+		dashFxId = Engine::GetInstance().audio->LoadFx(dashFxPath.c_str());
+		LOG("Loaded audio: player_dash");
+	}
+	if (!damageFxPath.empty()) {
+		damageFxId = Engine::GetInstance().audio->LoadFx(damageFxPath.c_str());
+		LOG("Loaded audio: player_damage");
+	}
+	if (!deathFxPath.empty()) {
+		deathFxId = Engine::GetInstance().audio->LoadFx(deathFxPath.c_str());
+		LOG("Loaded audio: player_death");
+	}
 
 	return true;
 }
@@ -110,6 +149,7 @@ bool Player::Update(float dt)
 			dashTimer -= dt;
 			if (dashTimer <= 0.0f) {
 				isDashing = false;
+				dashSoundPlayed = false; // Reset dash sound flag when dash ends
 			}
 		}
 
@@ -146,12 +186,6 @@ void Player::CheckDeath() {
 		LOG("Player died: Fell off the map!");
 		Die();
 	}
-
-	// Death by going above map (optional, uncomment if needed)
-	// if (position.getY() < -100.0f) {
-	//     LOG("Player died: Went above the map!");
-	//     Die();
-	// }
 }
 
 void Player::Die() {
@@ -159,6 +193,13 @@ void Player::Die() {
 
 	isDead = true;
 	respawnTimer = respawnDelay;
+
+	// Stop all sound effects and play death sound
+	Engine::GetInstance().audio->StopAllFx();
+
+	if (deathFxId > 0) {
+		Engine::GetInstance().audio->PlayFx(deathFxId);
+	}
 
 	// Stop all movement
 	Engine::GetInstance().physics->SetLinearVelocity(pbody, 0.0f, 0.0f);
@@ -168,6 +209,8 @@ void Player::Die() {
 	hasDoubleJump = false;
 	spaceWasReleased = false;
 	isDashing = false;
+	jumpSoundPlayed = false;
+	dashSoundPlayed = false;
 
 	LOG("=== PLAYER DIED ===");
 	LOG("Respawning in %.2f ms...", respawnDelay);
@@ -192,6 +235,8 @@ void Player::Respawn() {
 	spaceWasReleased = false;
 	isDashing = false;
 	dashCooldownTimer = 0.0f;
+	jumpSoundPlayed = false;
+	dashSoundPlayed = false;
 
 	// Reset animation
 	anims.SetCurrent("idle");
@@ -250,10 +295,19 @@ void Player::MoveGodMode() {
 void Player::Jump() {
 	if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_SPACE) == KEY_DOWN && !isJumping) {
 		Engine::GetInstance().physics->ApplyLinearImpulseToCenter(pbody, 0.0f, -jumpForce, true);
+
+		// Stop previous jump sound and play new one
+		Engine::GetInstance().audio->StopAllFx();
+
+		if (jumpFxId > 0) {
+			Engine::GetInstance().audio->PlayFx(jumpFxId);
+		}
+
 		anims.SetCurrent("jump");
 		isJumping = true;
 		hasDoubleJump = false;
 		spaceWasReleased = false;
+		jumpSoundPlayed = true;
 	}
 
 	if (isJumping && !spaceWasReleased && !hasDoubleJump &&
@@ -272,13 +326,20 @@ void Player::DoubleJump() {
 		Engine::GetInstance().physics->SetLinearVelocity(pbody, currentVel.x, doubleJumpVelocity);
 		Engine::GetInstance().physics->ApplyLinearImpulseToCenter(pbody, 0.0f, -jumpForce * 0.3f, true);
 
+		// Stop previous jump sound and play new one for double jump
+		Engine::GetInstance().audio->StopAllFx();
+
+		if (jumpFxId > 0) {
+			Engine::GetInstance().audio->PlayFx(jumpFxId);
+		}
+
 		anims.SetCurrent("jump");
 		hasDoubleJump = false;
 	}
 }
 
 void Player::Dash() {
-	if (dashCooldownTimer <= 0.0f && !isDashing) {
+	if (dashCooldownTimer <= 0.0f && !isDashing && !dashSoundPlayed) {
 
 		int desiredDashDir = 0;
 		if (Engine::GetInstance().input->GetKey(SDL_SCANCODE_LSHIFT) == KEY_DOWN ||
@@ -300,6 +361,11 @@ void Player::Dash() {
 			dashTimer = static_cast<float>(dashDuration);
 			dashCooldownTimer = static_cast<float>(dashCooldown);
 			dashDirection = desiredDashDir;
+			dashSoundPlayed = true;
+
+			if (dashFxId > 0) {
+				Engine::GetInstance().audio->PlayFx(dashFxId, 0.4f);
+			}
 
 			velocity.x = dashForce * static_cast<float>(dashDirection);
 
@@ -310,6 +376,10 @@ void Player::Dash() {
 				true
 			);
 		}
+	}
+
+	if (dashCooldownTimer <= 0.0f && dashSoundPlayed) {
+		dashSoundPlayed = false;
 	}
 }
 
@@ -348,10 +418,6 @@ void Player::Draw(float dt) {
 	position.setY(static_cast<float>(y));
 
 	UpdateCamera();
-
-	if (isDead) {
-		
-	}
 
 	Engine::GetInstance().render->DrawTexture(texture, x - texW / 2, y - texH / 2, &animFrame);
 }
@@ -405,17 +471,28 @@ void Player::OnCollision(PhysBody* physA, PhysBody* physB) {
 		isJumping = false;
 		hasDoubleJump = false;
 		spaceWasReleased = false;
+		jumpSoundPlayed = false; // Reset jump sound flag when landing
 		anims.SetCurrent("idle");
 		break;
 
 	case ColliderType::ITEM:
 		LOG("Collision ITEM");
-		Engine::GetInstance().audio->PlayFx(pickCoinFxId);
+		if (pickCoinFxId > 0) {
+			Engine::GetInstance().audio->PlayFx(pickCoinFxId);
+		}
 		physB->listener->Destroy();
 		break;
 
 	case ColliderType::ENEMY:
-		LOG("Player died: Hit damage object (spike/trap)!");
+		LOG("Player hit damage object (spike/trap)!");
+
+		// Stop all fx and play damage sound, then die
+		Engine::GetInstance().audio->StopAllFx();
+
+		if (damageFxId > 0) {
+			Engine::GetInstance().audio->PlayFx(damageFxId);
+		}
+
 		Die();
 		break;
 

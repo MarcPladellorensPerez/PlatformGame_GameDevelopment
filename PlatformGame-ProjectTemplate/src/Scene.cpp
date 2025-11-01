@@ -58,7 +58,12 @@ bool Scene::Awake()
 bool Scene::Start()
 {
 
-	Engine::GetInstance().audio->PlayMusic("Assets/Audio/Music/level-iv-339695.wav");
+	Engine::GetInstance().audio->PlayMusic("Assets/Audio/Music/background_music.wav");
+	Engine::GetInstance().audio->SetMusicVolume(0.1f);
+	Engine::GetInstance().audio->SetFxVolume(0.1f);
+	LOG("Audio volumes configured: Music=0.4, FX=0.6");
+	Engine::GetInstance().audio->PlayMusic("Assets/Audio/Music/background_music.wav");
+
 
 	LoadLevel(1);
 	//L06 TODO 3: Call the function to load the map. 

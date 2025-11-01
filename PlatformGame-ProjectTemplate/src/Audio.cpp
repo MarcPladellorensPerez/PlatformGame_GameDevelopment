@@ -170,13 +170,16 @@ bool Audio::PlayMusic(const char* path, float fadeTime) {
         return false;
     }
 
+    // Apply volume gain to music stream
+    SDL_SetAudioStreamGain(music_stream_, music_volume_);
+
     // Queue once (simple play). For looping, requeue when drained (TODO).
     if (!SDL_PutAudioStreamData(music_stream_, music_data_.buf, music_data_.len)) {
         LOG("Audio: SDL_PutAudioStreamData(music) failed: %s", SDL_GetError());
         return false;
     }
 
-    LOG("Audio: playing music %s", path);
+    LOG("Audio: playing music %s at volume %.2f", path, music_volume_);
     return true;
 }
 
@@ -207,6 +210,9 @@ bool Audio::PlayFx(int id, int repeat) {
         return false;
     }
 
+    // Apply volume gain to sfx stream
+    SDL_SetAudioStreamGain(sfx_stream_, fx_volume_);
+
     // Queue sound 'repeat+1' times
     for (int i = 0; i <= repeat; ++i) {
         if (!SDL_PutAudioStreamData(sfx_stream_, s.buf, s.len)) {
@@ -216,4 +222,72 @@ bool Audio::PlayFx(int id, int repeat) {
     }
 
     return true;
+}
+
+bool Audio::PlayFx(int id, float volume, int repeat) {
+    if (!active) return false;
+    if (id <= 0 || id > static_cast<int>(sfx_.size())) return false;
+    if (!EnsureStreams()) return false;
+
+    // Clamp volume between 0.0 and 1.0
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+
+    const SoundData& s = sfx_[static_cast<size_t>(id - 1)];
+
+    // Make sure the SFX stream input format matches this sound
+    if (!SDL_SetAudioStreamFormat(sfx_stream_, &s.spec, &device_spec_)) {
+        LOG("Audio: SDL_SetAudioStreamFormat(sfx) failed: %s", SDL_GetError());
+        return false;
+    }
+
+    // Apply CUSTOM volume gain to sfx stream (override default fx_volume_)
+    SDL_SetAudioStreamGain(sfx_stream_, volume);
+
+    // Queue sound 'repeat+1' times
+    for (int i = 0; i <= repeat; ++i) {
+        if (!SDL_PutAudioStreamData(sfx_stream_, s.buf, s.len)) {
+            LOG("Audio: SDL_PutAudioStreamData(sfx) failed: %s", SDL_GetError());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void Audio::SetMusicVolume(float volume) {
+    // Clamp volume between 0.0 and 1.0
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+
+    music_volume_ = volume;
+
+    // Apply to stream if it exists
+    if (music_stream_) {
+        SDL_SetAudioStreamGain(music_stream_, music_volume_);
+    }
+
+    LOG("Audio: Music volume set to %.2f", music_volume_);
+}
+
+void Audio::SetFxVolume(float volume) {
+    // Clamp volume between 0.0 and 1.0
+    if (volume < 0.0f) volume = 0.0f;
+    if (volume > 1.0f) volume = 1.0f;
+
+    fx_volume_ = volume;
+
+    // Apply to stream if it exists
+    if (sfx_stream_) {
+        SDL_SetAudioStreamGain(sfx_stream_, fx_volume_);
+    }
+
+    LOG("Audio: FX volume set to %.2f", fx_volume_);
+}
+
+void Audio::StopAllFx() {
+    if (sfx_stream_) {
+        SDL_ClearAudioStream(sfx_stream_);
+        LOG("Audio: All FX sounds stopped");
+    }
 }

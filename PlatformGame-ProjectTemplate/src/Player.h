@@ -62,8 +62,12 @@ public:
 	int texW = 32;
 	int texH = 32;
 
-	// Audio fx
+	// Audio fx IDs
 	int pickCoinFxId = 0;
+	int jumpFxId = 0;
+	int dashFxId = 0;
+	int damageFxId = 0;
+	int deathFxId = 0;
 
 	// L08 TODO 5: Add physics to the player - declare a Physics body
 	PhysBody* pbody = nullptr;
@@ -76,6 +80,10 @@ public:
 	float dashTimer = 0.0f;
 	float dashCooldownTimer = 0.0f;
 	int dashDirection = 0;
+
+	// Audio control flags (to prevent spam)
+	bool jumpSoundPlayed = false;
+	bool dashSoundPlayed = false;
 
 	// God mode
 	bool godMode = false;
@@ -95,9 +103,12 @@ private:
 	float checkpointRadius = 32.0f;
 	void CheckCheckpoints();
 
-
-	// Configuration paths
+	// Configuration paths (loaded from XML)
 	std::string texturePath;
 	std::string animTsxPath;
 	std::string pickCoinFxPath;
+	std::string jumpFxPath;
+	std::string dashFxPath;
+	std::string damageFxPath;
+	std::string deathFxPath;
 };
