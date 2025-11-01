@@ -284,7 +284,7 @@ bool Map::Load(std::string path, std::string fileName)
                         int gid = mapLayer->Get(i, j);
 
                         // gid == 49 → PLATFORM (collider normal)
-                        if (gid == 49) {
+                        if (gid == 1) {
                             Vector2D mapCoord = MapToWorld(i, j);
                             PhysBody* c1 = Engine::GetInstance().physics.get()->CreateRectangle(
                                 mapCoord.getX() + mapData.tileWidth / 2,
@@ -305,7 +305,7 @@ bool Map::Load(std::string path, std::string fileName)
                     for (int x = 0; x < mapData.width; x++) {
                         int gid = mapLayer->Get(y,x);
 
-                        if (gid == 50) {  // Verde = daño
+                        if (gid == 2) {  // Verde = daño
                             Vector2D mapCoord = MapToWorld(y, x);
                             PhysBody* c2 = Engine::GetInstance().physics.get()->CreateRectangle(
                                 mapCoord.getX() + mapData.tileWidth / 2,
