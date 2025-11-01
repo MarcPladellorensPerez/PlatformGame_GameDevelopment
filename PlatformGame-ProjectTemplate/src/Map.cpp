@@ -4,6 +4,8 @@
 #include "Map.h"
 #include "Log.h"
 #include "Physics.h"
+#include "EntityManager.h"
+#include "Item.h"
 
 #include <math.h>
 
@@ -269,6 +271,22 @@ bool Map::Load(std::string path, std::string fileName)
 
                     mapData.checkpoints.push_back(checkpoint);
                     LOG("  *** CHECKPOINT CARGADO: '%s' at (%.2f, %.2f) ***", checkpoint->name.c_str(), checkpoint->x, checkpoint->y);
+                }
+                else if (objectName == "Coin" || groupName == "Coins") {
+                    float x = objectNode.attribute("x").as_float();
+                    float y = objectNode.attribute("y").as_float();
+
+                    std::shared_ptr<Item> coin = std::dynamic_pointer_cast<Item>(
+                        Engine::GetInstance().entityManager->CreateEntity(EntityType::ITEM)
+                    );
+
+                    int texW = 0, texH = 0;
+                    SDL_Texture* tempTex = Engine::GetInstance().textures->Load("Assets/Textures/goldCoin.png");
+                    Engine::GetInstance().textures->GetSize(tempTex, texW, texH);
+
+                    coin->position = Vector2D(x - texW / 2 + 15, y - texH);
+
+                    LOG("🪙 Moneda creada desde mapa en (%.2f, %.2f)", x, y);
                 }
             }
         }

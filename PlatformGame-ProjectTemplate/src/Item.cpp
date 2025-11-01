@@ -27,7 +27,7 @@ bool Item::Start() {
 	
 	// L08 TODO 4: Add a physics to an item - initialize the physics body
 	Engine::GetInstance().textures.get()->GetSize(texture, texW, texH);
-	pbody = Engine::GetInstance().physics->CreateCircle((int)position.getX() + texH / 2, (int)position.getY() + texH / 2, texH / 2, bodyType::DYNAMIC);
+	pbody = Engine::GetInstance().physics->CreateCircle((int)position.getX() + texH / 2, (int)position.getY() + texH / 2, texH / 2, bodyType::STATIC);
 
 	// L08 TODO 7: Assign collider type
 	pbody->ctype = ColliderType::ITEM;
